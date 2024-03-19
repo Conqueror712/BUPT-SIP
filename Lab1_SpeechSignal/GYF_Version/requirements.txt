@@ -1,0 +1,8 @@
+numpy
+matplotlib
+scipy
+pandas
+pyaudio
+wave
+IPython
+librosa == 0.10.1
