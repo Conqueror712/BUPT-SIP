@@ -18,7 +18,7 @@ def load_audio_data(filepath):
     return np.array(audio)  # 这里我们转换为 NumPy 数组类型，以便后续处理
 
 
-def extract_features(audio):
+def extract_features(audio):    # 提取音频特征（MFCC特征）
     mfccs = librosa.feature.mfcc(y=audio, sr=16000, n_mfcc=13)
     return mfccs.T  # 转置以满足 sklearn 的输入要求（查文档得知）
 
@@ -88,13 +88,6 @@ def main():
     # 测试 GMM 模型
     train_predictions = test_gmm(gmm, train_features)
     test_predictions = test_gmm(gmm, test_features)
-
-    # 计算指标，目前还有点问题...
-    train_accuracy = calculate_accuracy(train_labels, train_predictions)
-    test_accuracy = calculate_accuracy(test_labels, test_predictions)
-
-    # print("Train Accuracy:", train_accuracy)
-    # print("Test Accuracy:", test_accuracy)
 
     sample_audio = load_audio_data(train_data[0]['filepath'])
     sample_features = extract_features(sample_audio)
