@@ -1,5 +1,5 @@
 Lab2_SpeakerRecognition/timit_full/
 Lab2_SpeakerRecognition/timit_lite/
-FinalLab_SpeechSynthesis/saved_models/default/synthesizer.pt
-FinalLab_SpeechSynthesis/saved_models/default/encoder.pt
-FinalLab_SpeechSynthesis/saved_models/default/vocoder.pt
+FinalLab_SpeechSynthesis/models/default/synthesizer.pt
+FinalLab_SpeechSynthesis/models/default/encoder.pt
+FinalLab_SpeechSynthesis/models/default/vocoder.pt
