@@ -19,9 +19,19 @@ class DownloadProgressBar(tqdm):
             self.total = tsize
         self.update(b * bsize - self.n)
 
-#下载单个文件
+
 def download(url: str, target: Path, bar_pos=0):
-    #确保存储下载文件的目录存在
+     """
+    从指定的 URL 下载文件到本地路径，并显示进度条。如果在下载过程中遇到 HTTP 错误，则下载会提前结束。
+
+    参数：
+    - url: 要下载的文件的 URL。
+    - target: 本地存储文件的路径对象。
+    - bar_pos: 进度条在多进度条列表中的位置，默认为0。
+
+    返回值：
+    - 无返回值。如果下载过程中出现 HTTP 错误，函数将提前返回。
+    """
     target.parent.mkdir(exist_ok=True, parents=True)
 
     desc = f"Downloading {target.name}"
@@ -31,9 +41,17 @@ def download(url: str, target: Path, bar_pos=0):
         except HTTPError:
             return
 
-#确保所有必要的模型都被下载到指定的目录
+
 def ensure_default_models(models_dir: Path):
-    # 定义下载任务
+    """
+    确保指定目录中包含所有预设的模型文件。如果模型文件不存在或大小不正确，将会从指定的URL重新下载。
+
+    参数：
+    - models_dir: 存放模型文件的根目录的路径对象。
+
+    返回值：
+    - 无返回值。所有文件应当在函数结束时正确下载并存放于指定位置。
+    """
     jobs = []
     for model_name, (url, size) in default_models.items():
         target_path = models_dir / "default" / f"{model_name}.pt"
