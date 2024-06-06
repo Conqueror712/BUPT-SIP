@@ -8,6 +8,14 @@ import torch
 
 class VocoderDataset(Dataset):
     def __init__(self, metadata_fpath: Path, mel_dir: Path, wav_dir: Path):
+        """
+        初始化数据集对象。
+        
+        参数:
+        - metadata_fpath: 包含数据集元数据的文件路径。
+        - mel_dir: 梅尔频谱图文件的目录。
+        - wav_dir: 音频文件的目录。
+        """
         print("Using inputs from:\n\t%s\n\t%s\n\t%s" % (metadata_fpath, mel_dir, wav_dir))
         
         with metadata_fpath.open("r") as metadata_file:
@@ -22,25 +30,33 @@ class VocoderDataset(Dataset):
         print("Found %d samples" % len(self.samples_fpaths))
     
     def __getitem__(self, index):  
+        """
+        获取指定索引的数据样本。
+        
+        参数:
+        - index: 数据样本的索引。
+        
+        返回值:
+        - 一个包含梅尔频谱图和量化后的音频数据的元组。
+        """
         mel_path, wav_path = self.samples_fpaths[index]
         
-        # Load the mel spectrogram and adjust its range to [-1, 1]
+        # 加载梅尔频谱图并调整其范围到 [-1, 1]
         mel = np.load(mel_path).T.astype(np.float32) / hp.mel_max_abs_value
         
-        # Load the wav
+        # 加载音频文件
         wav = np.load(wav_path)
         if hp.apply_preemphasis:
             wav = audio.pre_emphasis(wav)
         wav = np.clip(wav, -1, 1)
         
-        # Fix for missing padding   # TODO: settle on whether this is any useful
         r_pad =  (len(wav) // hp.hop_length + 1) * hp.hop_length - len(wav)
         wav = np.pad(wav, (0, r_pad), mode='constant')
         assert len(wav) >= mel.shape[1] * hp.hop_length
         wav = wav[:mel.shape[1] * hp.hop_length]
         assert len(wav) % hp.hop_length == 0
         
-        # Quantize the wav
+        # 量化音频数据
         if hp.voc_mode == 'RAW':
             if hp.mu_law:
                 quant = audio.encode_mu_law(wav, mu=2 ** hp.bits)
@@ -56,6 +72,15 @@ class VocoderDataset(Dataset):
         
         
 def collate_vocoder(batch):
+    """
+    将数据样本整理成批次。
+    
+    参数:
+    - batch: 数据样本的列表。
+    
+    返回值:
+    - 一个包含输入数据、目标数据和梅尔频谱图的元组。
+    """
     mel_win = hp.voc_seq_len // hp.hop_length + 2 * hp.voc_pad
     max_offsets = [x[0].shape[-1] -2 - (mel_win + 2 * hp.voc_pad) for x in batch]
     mel_offsets = [np.random.randint(0, offset) for offset in max_offsets]
