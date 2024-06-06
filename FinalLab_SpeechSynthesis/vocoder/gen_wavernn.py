@@ -3,6 +3,20 @@ from vocoder.audio import *
 
 
 def gen_testset(model: WaveRNN, test_set, samples, batched, target, overlap, save_path):
+
+    """
+    使用 WaveRNN 模型生成测试集音频样本并保存。
+
+    参数:
+    - model: WaveRNN 模型实例。
+    - test_set: 测试集数据。
+    - samples: 要生成的样本数量。
+    - batched: 是否使用批处理。
+    - target: 目标长度。
+    - overlap: 重叠步数。
+    - save_path: 保存生成音频文件的路径。
+
+    """
     k = model.get_step() // 1000
 
     for i, (m, x) in enumerate(test_set, 1):
