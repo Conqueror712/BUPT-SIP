@@ -12,16 +12,16 @@ default_models = {
     "vocoder": ("https://drive.google.com/uc?export=download&id=1cf2NO6FtI0jDuy8AV3Xgn6leO6dHjIgu", 53845290),
 }
 
-
+#根据下载的字节数更新进度条的状态
 class DownloadProgressBar(tqdm):
     def update_to(self, b=1, bsize=1, tsize=None):
         if tsize is not None:
             self.total = tsize
         self.update(b * bsize - self.n)
 
-
+#下载单个文件
 def download(url: str, target: Path, bar_pos=0):
-    # Ensure the directory exists
+    #确保存储下载文件的目录存在
     target.parent.mkdir(exist_ok=True, parents=True)
 
     desc = f"Downloading {target.name}"
@@ -31,9 +31,9 @@ def download(url: str, target: Path, bar_pos=0):
         except HTTPError:
             return
 
-
+#确保所有必要的模型都被下载到指定的目录
 def ensure_default_models(models_dir: Path):
-    # Define download tasks
+    # 定义下载任务
     jobs = []
     for model_name, (url, size) in default_models.items():
         target_path = models_dir / "default" / f"{model_name}.pt"
@@ -47,7 +47,7 @@ def ensure_default_models(models_dir: Path):
         thread.start()
         jobs.append((thread, target_path, size))
 
-    # Run and join threads
+    #运行并添加线程
     for thread, target_path, size in jobs:
         thread.join()
 
