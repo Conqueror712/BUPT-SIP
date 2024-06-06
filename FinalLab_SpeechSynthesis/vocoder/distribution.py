@@ -4,8 +4,15 @@ import torch.nn.functional as F
 
 
 def log_sum_exp(x):
-    """ numerically stable log_sum_exp implementation that prevents overflow """
-    # TF ordering
+    """
+    数值稳定的 log_sum_exp 实现，防止溢出。
+
+    参数:
+    - x: 输入张量。
+
+    返回值:
+    - 数值稳定的 log_sum_exp 值。
+    """
     axis = len(x.size()) - 1
     m, _ = torch.max(x, dim=axis)
     m2, _ = torch.max(x, dim=axis, keepdim=True)
@@ -15,6 +22,19 @@ def log_sum_exp(x):
 # It is adapted from https://github.com/r9y9/wavenet_vocoder/blob/master/wavenet_vocoder/mixture.py
 def discretized_mix_logistic_loss(y_hat, y, num_classes=65536,
                                   log_scale_min=None, reduce=True):
+    """
+    计算离散混合逻辑斯蒂分布的损失。
+
+    参数:
+    - y_hat: 预测值张量。
+    - y: 真实值张量。
+    - num_classes: 类别数，默认为 65536。
+    - log_scale_min: 对数尺度的最小值，默认为 None。
+    - reduce: 是否进行均值化处理，默认为 True。
+
+    返回值:
+    - 计算得到的损失值。
+    """
     if log_scale_min is None:
         log_scale_min = float(np.log(1e-14))
     y_hat = y_hat.permute(0,2,1)
@@ -40,15 +60,15 @@ def discretized_mix_logistic_loss(y_hat, y, num_classes=65536,
     min_in = inv_stdv * (centered_y - 1. / (num_classes - 1))
     cdf_min = torch.sigmoid(min_in)
 
-    # log probability for edge case of 0 (before scaling)
+    # 边缘值为 0 的对数概率
     # equivalent: torch.log(F.sigmoid(plus_in))
     log_cdf_plus = plus_in - F.softplus(plus_in)
 
-    # log probability for edge case of 255 (before scaling)
+    # 边缘值为255的对数概率
     # equivalent: (1 - F.sigmoid(min_in)).log()
     log_one_minus_cdf_min = -F.softplus(min_in)
 
-    # probability for all other cases
+    # 所有其他情况的概率
     cdf_delta = cdf_plus - cdf_min
 
     mid_in = inv_stdv * centered_y
@@ -56,7 +76,7 @@ def discretized_mix_logistic_loss(y_hat, y, num_classes=65536,
     # (not actually used in our code)
     log_pdf_mid = mid_in - log_scales - 2. * F.softplus(mid_in)
 
-    # tf equivalent
+    # tf 等效
     """
     log_probs = tf.where(x < -0.999, log_cdf_plus,
                          tf.where(x > 0.999, log_one_minus_cdf_min,
@@ -85,13 +105,15 @@ def discretized_mix_logistic_loss(y_hat, y, num_classes=65536,
 
 
 def sample_from_discretized_mix_logistic(y, log_scale_min=None):
-    """
-    Sample from discretized mixture of logistic distributions
-    Args:
-        y (Tensor): B x C x T
-        log_scale_min (float): Log scale minimum value
-    Returns:
-        Tensor: sample in range of [-1, 1].
+   """
+    从离散混合逻辑斯蒂分布中采样。
+
+    参数:
+    - y: 输入张量，形状为 (B, C, T)。
+    - log_scale_min: 对数尺度的最小值，默认为 None。
+
+    返回值:
+    - 采样得到的张量，范围在 [-1, 1] 之间。
     """
     if log_scale_min is None:
         log_scale_min = float(np.log(1e-14))
@@ -102,19 +124,18 @@ def sample_from_discretized_mix_logistic(y, log_scale_min=None):
     y = y.transpose(1, 2)
     logit_probs = y[:, :, :nr_mix]
 
-    # sample mixture indicator from softmax
+    # 来自 softmax 的样本混合物指示器
     temp = logit_probs.data.new(logit_probs.size()).uniform_(1e-5, 1.0 - 1e-5)
     temp = logit_probs.data - torch.log(- torch.log(temp))
     _, argmax = temp.max(dim=-1)
 
     # (B, T) -> (B, T, nr_mix)
     one_hot = to_one_hot(argmax, nr_mix)
-    # select logistic parameters
+    # 选择逻辑参数
     means = torch.sum(y[:, :, nr_mix:2 * nr_mix] * one_hot, dim=-1)
     log_scales = torch.clamp(torch.sum(
         y[:, :, 2 * nr_mix:3 * nr_mix] * one_hot, dim=-1), min=log_scale_min)
-    # sample from logistic & clip to interval
-    # we don't actually round to the nearest 8bit value when sampling
+    # 从 Logistic 提取样本并剪切到区间
     u = means.data.new(means.size()).uniform_(1e-5, 1.0 - 1e-5)
     x = means + torch.exp(log_scales) * (torch.log(u) - torch.log(1. - u))
 
@@ -124,7 +145,17 @@ def sample_from_discretized_mix_logistic(y, log_scale_min=None):
 
 
 def to_one_hot(tensor, n, fill_with=1.):
-    # we perform one hot encore with respect to the last axis
+    """
+    将张量转换为one_hot编码。
+
+    参数:
+    - tensor: 输入张量。
+    - n: one_hot编码的维度。
+    - fill_with: 填充值，默认为 1.0。
+
+    返回值:
+    - one_hot编码的张量。
+    """
     one_hot = torch.FloatTensor(tensor.size() + (n,)).zero_()
     if tensor.is_cuda:
         one_hot = one_hot.cuda()
