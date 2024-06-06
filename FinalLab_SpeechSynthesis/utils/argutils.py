@@ -10,6 +10,7 @@ _type_priorities = [    # In decreasing order
     bool,
 ]
 
+#确定对象o的类型优先级
 def _priority(o):
     p = next((i for i, t in enumerate(_type_priorities) if type(o) is t), None) 
     if p is not None:
@@ -19,6 +20,7 @@ def _priority(o):
         return p
     return len(_type_priorities)
 
+#打印解析的命令行参数
 def print_args(args: argparse.Namespace, parser=None):
     args = vars(args)
     if parser is None:
