@@ -6,6 +6,13 @@ import torch
 _model = None   # type: WaveRNN
 
 def load_model(weights_fpath, verbose=True):
+    """
+    加载 WaveRNN 模型及其权重。
+
+    参数:
+    - weights_fpath: 权重文件路径。
+    - verbose: 是否输出详细信息，默认为 True。
+    """
     global _model, _device
     
     if verbose:
@@ -37,7 +44,7 @@ def load_model(weights_fpath, verbose=True):
     _model.load_state_dict(checkpoint['model_state'])
     _model.eval()
 
-
+# 检查模型是否已经加载。
 def is_loaded():
     return _model is not None
 
@@ -45,14 +52,18 @@ def is_loaded():
 def infer_waveform(mel, normalize=True,  batched=True, target=8000, overlap=800, 
                    progress_callback=None):
     """
-    Infers the waveform of a mel spectrogram output by the synthesizer (the format must match 
-    that of the synthesizer!)
-    
-    :param normalize:  
-    :param batched: 
-    :param target: 
-    :param overlap: 
-    :return: 
+    从梅尔频谱图推断波形，格式必须与合成器的输出一致。
+
+    参数:
+    - mel: 梅尔频谱图。
+    - normalize: 是否归一化梅尔频谱图，默认为 True。
+    - batched: 是否批处理，默认为 True。
+    - target: 目标长度，默认为 8000。
+    - overlap: 重叠长度，默认为 800。
+    - progress_callback: 进度回调函数，默认为 None。
+
+    返回值:
+    - 生成的波形。
     """
     if _model is None:
         raise Exception("Please load Wave-RNN in memory before using it")
