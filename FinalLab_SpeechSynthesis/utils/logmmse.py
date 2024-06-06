@@ -35,14 +35,17 @@ NoiseProfile = namedtuple("NoiseProfile", "sampling_rate window_size len1 len2 w
 
 def profile_noise(noise, sampling_rate, window_size=0):
     """
-    Creates a profile of the noise in a given waveform.
-    
-    :param noise: a waveform containing noise ONLY, as a numpy array of floats or ints. 
-    :param sampling_rate: the sampling rate of the audio
-    :param window_size: the size of the window the logmmse algorithm operates on. A default value 
-    will be picked if left as 0.
-    :return: a NoiseProfile object
+    创建一个给定波形噪声的剖面。通过对输入的噪声波形进行傅里叶变换并处理，生成一个包含噪声数据特征的对象。
+
+    参数：
+    - noise: 仅包含噪声的波形。
+    - sampling_rate: 音频的采样率。
+    - window_size: logmmse算法操作的窗口大小。如果设置为0，则会自动选择一个默认值。
+
+    返回值：
+    - NoiseProfile对象，包含噪声剖面的相关数据。
     """
+    
     noise, dtype = to_float(noise)
     noise += np.finfo(np.float64).eps
 
@@ -56,12 +59,16 @@ def profile_noise(noise, sampling_rate, window_size=0):
     len1 = int(math.floor(window_size * perc / 100))
     len2 = int(window_size - len1)
 
+    #创建汉宁窗，并调整其总能量
     win = np.hanning(window_size)
     win = win * len2 / np.sum(win)
     n_fft = 2 * window_size
 
+    
     noise_mean = np.zeros(n_fft)
     n_frames = len(noise) // window_size
+
+    # 通过FFT计算噪声的平均功率谱
     for j in range(0, window_size * n_frames, window_size):
         noise_mean += np.absolute(np.fft.fft(win * noise[j:j + window_size], n_fft, axis=0))
     noise_mu2 = (noise_mean / n_frames) ** 2
@@ -71,17 +78,17 @@ def profile_noise(noise, sampling_rate, window_size=0):
 
 def denoise(wav, noise_profile: NoiseProfile, eta=0.15):
     """
-    Cleans the noise from a speech waveform given a noise profile. The waveform must have the 
-    same sampling rate as the one used to create the noise profile. 
-    
-    :param wav: a speech waveform as a numpy array of floats or ints.
-    :param noise_profile: a NoiseProfile object that was created from a similar (or a segment of 
-    the same) waveform.
-    :param eta: voice threshold for noise update. While the voice activation detection value is 
-    below this threshold, the noise profile will be continuously updated throughout the audio. 
-    Set to 0 to disable updating the noise profile.
-    :return: the clean wav as a numpy array of floats or ints of the same length.
+    对输入的音频波形进行去噪处理。使用预先计算的噪声剖面来估计和减少噪声的影响。
+
+    参数：
+    - wav: 需要去噪的音频波形。
+    - noise_profile: 预先计算好的噪声剖面对象，包含了噪声的各种参数和数据。
+    - eta: 语音活动检测(VAD)的决策阈值，默认值为0.15。
+
+    返回值：
+    - 去噪后的音频波形，格式与输入波形相同。
     """
+    
     wav, dtype = to_float(wav)
     wav += np.finfo(np.float64).eps
     p = noise_profile
@@ -96,15 +103,19 @@ def denoise(wav, noise_profile: NoiseProfile, eta=0.15):
     x_old = np.zeros(p.len1)
     xk_prev = np.zeros(p.len1)
     noise_mu2 = p.noise_mu2
+    # 进行帧处理
     for k in range(0, nframes * p.len2, p.len2):
         insign = p.win * wav[k:k + p.window_size]
 
+        # FFT变换
         spec = np.fft.fft(insign, p.n_fft, axis=0)
         sig = np.absolute(spec)
         sig2 = sig ** 2
 
+        # 计算后验信噪比
         gammak = np.minimum(sig2 / noise_mu2, 40)
 
+        # 更新先验信噪比
         if xk_prev.all() == 0:
             ksi = aa + (1 - aa) * np.maximum(gammak - 1, 0)
         else:
@@ -217,7 +228,7 @@ def denoise(wav, noise_profile: NoiseProfile, eta=0.15):
 #     vad = np.pad(vad, (0, len(wav) - len(vad)), mode="constant")
 #     return vad
 
-
+# 将输入的音频数据从其原始数据类型转换为浮点数形式
 def to_float(_input):
     if _input.dtype == np.float64:
         return _input, _input.dtype
@@ -231,7 +242,7 @@ def to_float(_input):
         return _input / 2147483648., _input.dtype
     raise ValueError('Unsupported wave file format')
 
-
+# 将浮点数格式的音频数据转换回其原始的数据类型
 def from_float(_input, dtype):
     if dtype == np.float64:
         return _input, np.float64
