@@ -10,8 +10,18 @@ _type_priorities = [    # In decreasing order
     bool,
 ]
 
-#确定对象o的类型优先级
+
 def _priority(o):
+    """
+    此函数通过检查对象 `o` 的类型，与预定义列表 `_type_priorities` 中的类型进行匹配，来计算该对象的优先级。
+
+    参数：
+    - o: 需要确定类型优先级的对象。
+
+    返回值：
+    - int: 对象的优先级。数字越小，优先级越高。
+
+    """
     p = next((i for i, t in enumerate(_type_priorities) if type(o) is t), None) 
     if p is not None:
         return p
@@ -20,8 +30,15 @@ def _priority(o):
         return p
     return len(_type_priorities)
 
-#打印解析的命令行参数
+
 def print_args(args: argparse.Namespace, parser=None):
+      """
+    打印从 argparse 解析得到的命令行参数。
+
+    参数:
+    - args: 包含命令行参数的 Namespace 对象。
+    - parser 用于解析命令行参数的解析器对象。
+    """
     args = vars(args)
     if parser is None:
         priorities = list(map(_priority, args.values()))
