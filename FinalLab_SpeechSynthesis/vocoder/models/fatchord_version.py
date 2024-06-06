@@ -8,6 +8,11 @@ from vocoder.audio import *
 
 class ResBlock(nn.Module):
     def __init__(self, dims):
+        """
+        初始化残差块。
+        参数：
+        - dims: 残差块的维度（即通道数或特征数）。
+        """
         super().__init__()
         self.conv1 = nn.Conv1d(dims, dims, kernel_size=1, bias=False)
         self.conv2 = nn.Conv1d(dims, dims, kernel_size=1, bias=False)
@@ -15,6 +20,11 @@ class ResBlock(nn.Module):
         self.batch_norm2 = nn.BatchNorm1d(dims)
 
     def forward(self, x):
+        """
+        前向传播逻辑。
+        参数：
+        - x: 输入特征。
+        """
         residual = x
         x = self.conv1(x)
         x = self.batch_norm1(x)
@@ -26,6 +36,15 @@ class ResBlock(nn.Module):
 
 class MelResNet(nn.Module):
     def __init__(self, res_blocks, in_dims, compute_dims, res_out_dims, pad):
+        """
+        初始化 MelResNet 模型。
+        参数：
+        - res_blocks: 残差块的数量。
+        - in_dims: 输入维度。
+        - compute_dims: 计算维度。
+        - res_out_dims: 残差块输出维度。
+        - pad: 卷积的填充大小。
+        """
         super().__init__()
         k_size = pad * 2 + 1
         self.conv_in = nn.Conv1d(in_dims, compute_dims, kernel_size=k_size, bias=False)
@@ -36,6 +55,11 @@ class MelResNet(nn.Module):
         self.conv_out = nn.Conv1d(compute_dims, res_out_dims, kernel_size=1)
 
     def forward(self, x):
+        """
+        前向传播逻辑。
+        参数：
+        - x: 输入特征。
+        """
         x = self.conv_in(x)
         x = self.batch_norm(x)
         x = F.relu(x)
@@ -46,11 +70,22 @@ class MelResNet(nn.Module):
 
 class Stretch2d(nn.Module):
     def __init__(self, x_scale, y_scale):
+        """
+        初始化 Stretch2d 模块。
+        参数：
+        - x_scale: 沿x轴的扩展比例。
+        - y_scale: 沿y轴的扩展比例。
+        """
         super().__init__()
         self.x_scale = x_scale
         self.y_scale = y_scale
 
     def forward(self, x):
+        """
+        前向传播，进行特征图扩展。
+        参数：
+        - x: 输入特征图。
+        """
         b, c, h, w = x.size()
         x = x.unsqueeze(-1).unsqueeze(3)
         x = x.repeat(1, 1, 1, self.y_scale, 1, self.x_scale)
@@ -60,6 +95,16 @@ class Stretch2d(nn.Module):
 class UpsampleNetwork(nn.Module):
     def __init__(self, feat_dims, upsample_scales, compute_dims,
                  res_blocks, res_out_dims, pad):
+        """
+        初始化 UpsampleNetwork 网络。
+        参数：
+        - feat_dims: 特征维度。
+        - upsample_scales: 上采样比例列表。
+        - compute_dims: 计算维度。
+        - res_blocks: 残差块数量。
+        - res_out_dims: 残差块输出维度。
+        - pad: 填充大小。
+        """
         super().__init__()
         total_scale = np.cumproduct(upsample_scales)[-1]
         self.indent = pad * total_scale
@@ -76,6 +121,11 @@ class UpsampleNetwork(nn.Module):
             self.up_layers.append(conv)
 
     def forward(self, m):
+        """
+        前向传播逻辑。
+        参数：
+        - m: 输入特征。
+        """
         aux = self.resnet(m).unsqueeze(1)
         aux = self.resnet_stretch(aux)
         aux = aux.squeeze(1)
@@ -89,6 +139,21 @@ class WaveRNN(nn.Module):
     def __init__(self, rnn_dims, fc_dims, bits, pad, upsample_factors,
                  feat_dims, compute_dims, res_out_dims, res_blocks,
                  hop_length, sample_rate, mode='RAW'):
+    """
+    参数:
+    - rnn_dims: RNN 层的维度。
+    - fc_dims: 全连接层的维度。
+    - bits: 用于量化的位数，影响音频的输出解析度。
+    - pad: 用于填充的大小，影响卷积操作。
+    - upsample_factors: 上采样因子数组，决定特征上采样的倍数。
+    - feat_dims: 特征维度。
+    - compute_dims: 计算维度，用于中间层。
+    - res_out_dims: 残差网络输出维度。
+    - res_blocks: 残差块的数量。
+    - hop_length: 音频处理中的跳跃长度，影响时间分辨率。
+    - sample_rate: 采样率，定义音频的时间分辨率。
+    - mode: 模型的运行模式，'RAW' 用于原始波形生成，'MOL' 用于混合逻辑输出。
+    """
         super().__init__()
         self.mode = mode
         self.pad = pad
@@ -116,6 +181,12 @@ class WaveRNN(nn.Module):
         self.num_params()
 
     def forward(self, x, mels):
+        """
+        前向传播过程。
+        参数:
+        - x: 输入音频数据。
+        - mels: 梅尔频谱特征，通常是音频的压缩表示形式。
+        """
         self.step += 1
         bsize = x.size(0)
         if torch.cuda.is_available():
@@ -151,6 +222,16 @@ class WaveRNN(nn.Module):
         return self.fc3(x)
 
     def generate(self, mels, batched, target, overlap, mu_law, progress_callback=None):
+        """
+        生成音频数据。
+        参数:
+        - mels: 梅尔频谱特征。
+        - batched: 是否批处理。
+        - target: 目标长度。
+        - overlap: 重叠区域长度。
+        - mu_law: 是否使用μ律压缩。
+        - progress_callback: 进度回调函数。
+        """
         mu_law = mu_law if self.mode == 'RAW' else False
         progress_callback = progress_callback or self.gen_display
 
@@ -258,11 +339,26 @@ class WaveRNN(nn.Module):
 
 
     def gen_display(self, i, seq_len, b_size, gen_rate):
+        """
+        显示生成音频的进度信息。
+        参数:
+        - i: 当前处理的步数。
+        - seq_len: 总步数。
+        - b_size: 批量大小。
+        - gen_rate: 生成速率，单位kHz。
+        """
         pbar = progbar(i, seq_len)
         msg = f'| {pbar} {i*b_size}/{seq_len*b_size} | Batch Size: {b_size} | Gen Rate: {gen_rate:.1f}kHz | '
         stream(msg)
 
     def get_gru_cell(self, gru):
+        """
+        从 GRU 层中提取单个 GRU 单元。
+        参数:
+        - gru: GRU 层。
+        返回:
+        - GRU 单元。
+        """
         gru_cell = nn.GRUCell(gru.input_size, gru.hidden_size)
         gru_cell.weight_hh.data = gru.weight_hh_l0.data
         gru_cell.weight_ih.data = gru.weight_ih_l0.data
@@ -271,8 +367,15 @@ class WaveRNN(nn.Module):
         return gru_cell
 
     def pad_tensor(self, x, pad, side='both'):
-        # NB - this is just a quick method i need right now
-        # i.e., it won't generalise to other shapes/dims
+        """
+        对给定的张量在时间维度上进行填充。
+        参数:
+        - x: 输入张量。
+        - pad: 填充大小。
+        - side: 填充的方向，可以是 'both', 'before', 或 'after'。
+        返回:
+        - 填充后的张量。
+        """
         b, t, c = x.size()
         total = t + 2 * pad if side == 'both' else t + pad
         if torch.cuda.is_available():
@@ -286,30 +389,15 @@ class WaveRNN(nn.Module):
         return padded
 
     def fold_with_overlap(self, x, target, overlap):
-
-        ''' Fold the tensor with overlap for quick batched inference.
-            Overlap will be used for crossfading in xfade_and_unfold()
-
-        Args:
-            x (tensor)    : Upsampled conditioning features.
-                            shape=(1, timesteps, features)
-            target (int)  : Target timesteps for each index of batch
-            overlap (int) : Timesteps for both xfade and rnn warmup
-
-        Return:
-            (tensor) : shape=(num_folds, target + 2 * overlap, features)
-
-        Details:
-            x = [[h1, h2, ... hn]]
-
-            Where each h is a vector of conditioning features
-
-            Eg: target=2, overlap=1 with x.size(1)=10
-
-            folded = [[h1, h2, h3, h4],
-                      [h4, h5, h6, h7],
-                      [h7, h8, h9, h10]]
-        '''
+    """
+    将输入张量折叠成多个重叠段，以便于批量处理。
+    参数:
+    - x: 输入张量，通常是上采样后的条件特征。
+    - target: 目标段长度。
+    - overlap: 重叠大小。
+    返回:
+    - 折叠后的张量。
+    """
 
         _, total_len, features = x.size()
 
@@ -339,61 +427,40 @@ class WaveRNN(nn.Module):
 
     def xfade_and_unfold(self, y, target, overlap):
 
-        ''' Applies a crossfade and unfolds into a 1d array.
+    """
+    应用交叉淡入淡出效果并将其展开为一维数组。
 
-        Args:
-            y (ndarry)    : Batched sequences of audio samples
-                            shape=(num_folds, target + 2 * overlap)
-                            dtype=np.float64
-            overlap (int) : Timesteps for both xfade and rnn warmup
+    参数:
+    - y: 批处理的音频样本序列，形状为 (num_folds, target + 2 * overlap)，类型为 np.float64。
+    - target: 目标段长度。
+    - overlap: 重叠步数，用于交叉淡入淡出和 RNN 热身。
 
-        Return:
-            (ndarry) : audio samples in a 1d array
-                       shape=(total_len)
-                       dtype=np.float64
-
-        Details:
-            y = [[seq1],
-                 [seq2],
-                 [seq3]]
-
-            Apply a gain envelope at both ends of the sequences
-
-            y = [[seq1_in, seq1_target, seq1_out],
-                 [seq2_in, seq2_target, seq2_out],
-                 [seq3_in, seq3_target, seq3_out]]
-
-            Stagger and add up the groups of samples:
-
-            [seq1_in, seq1_target, (seq1_out + seq2_in), seq2_target, ...]
-
-        '''
+    返回值:
+    - 展开的一维音频样本数组，形状为 (total_len)，类型为 np.float64。
+    """
 
         num_folds, length = y.shape
         target = length - 2 * overlap
         total_len = num_folds * (target + overlap) + overlap
 
-        # Need some silence for the rnn warmup
         silence_len = overlap // 2
         fade_len = overlap - silence_len
         silence = np.zeros((silence_len), dtype=np.float64)
 
-        # Equal power crossfade
         t = np.linspace(-1, 1, fade_len, dtype=np.float64)
         fade_in = np.sqrt(0.5 * (1 + t))
         fade_out = np.sqrt(0.5 * (1 - t))
 
-        # Concat the silence to the fades
         fade_in = np.concatenate([silence, fade_in])
         fade_out = np.concatenate([fade_out, silence])
 
-        # Apply the gain to the overlap samples
+        # 将增益应用到重叠样本
         y[:, :overlap] *= fade_in
         y[:, -overlap:] *= fade_out
 
         unfolded = np.zeros((total_len), dtype=np.float64)
 
-        # Loop to add up all the samples
+        # 循环以累加所有样本
         for i in range(num_folds):
             start = i * (target + overlap)
             end = start + target + 2 * overlap
@@ -402,17 +469,44 @@ class WaveRNN(nn.Module):
         return unfolded
 
     def get_step(self) :
+        """
+        获取当前的步数。
+
+        返回值:
+        - 当前的步数，类型为 int。
+        """
         return self.step.data.item()
 
     def checkpoint(self, model_dir, optimizer) :
+    """
+    保存模型的检查点。
+
+    参数:
+    - model_dir: 模型保存的目录。
+    - optimizer: 优化器对象。
+    """
         k_steps = self.get_step() // 1000
         self.save(model_dir.joinpath("checkpoint_%dk_steps.pt" % k_steps), optimizer)
 
     def log(self, path, msg) :
+    """
+    记录日志信息。
+
+    参数:
+    - path: 日志文件的路径。
+    - msg: 要记录的信息。
+    """
         with open(path, 'a') as f:
             print(msg, file=f)
 
     def load(self, path, optimizer) :
+    """
+    加载模型的检查点。
+
+    参数:
+    - path: 检查点文件的路径。
+    - optimizer: 优化器对象。
+    """
         checkpoint = torch.load(path)
         if "optimizer_state" in checkpoint:
             self.load_state_dict(checkpoint["model_state"])
@@ -422,12 +516,25 @@ class WaveRNN(nn.Module):
             self.load_state_dict(checkpoint)
 
     def save(self, path, optimizer) :
+    """
+    保存模型的状态和优化器的状态。
+
+    参数:
+    - path: 保存文件的路径。
+    - optimizer: 优化器对象。
+    """
         torch.save({
             "model_state": self.state_dict(),
             "optimizer_state": optimizer.state_dict(),
         }, path)
 
     def num_params(self, print_out=True):
+    """
+    计算并打印模型的可训练参数数量。
+
+    参数:
+    - print_out: 是否打印参数数量，默认为 True。
+    """
         parameters = filter(lambda p: p.requires_grad, self.parameters())
         parameters = sum([np.prod(p.size()) for p in parameters]) / 1_000_000
         if print_out :
