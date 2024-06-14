@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="VcsDirectoryMappings">
-    <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/Lab3_SpeechSynthesis&amp;Conversion/GPT-SoVITS" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/Lab3_SpeechSynthesis&amp;Conversion/GPT-SoVITS/GPT_SoVITS/pretrained_models" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/Lab3_SpeechSynthesis&amp;Conversion/GPT-SoVITS/tools/uvr5/uvr5_weights/VoiceConversionWebUI" vcs="Git" />
-  </component>
-</project>
