@@ -32,7 +32,7 @@ def _priority(o):
 
 
 def print_args(args: argparse.Namespace, parser=None):
-      """
+    """
     打印从 argparse 解析得到的命令行参数。
 
     参数:

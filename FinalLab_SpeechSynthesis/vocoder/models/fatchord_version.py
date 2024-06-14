@@ -139,30 +139,30 @@ class WaveRNN(nn.Module):
     def __init__(self, rnn_dims, fc_dims, bits, pad, upsample_factors,
                  feat_dims, compute_dims, res_out_dims, res_blocks,
                  hop_length, sample_rate, mode='RAW'):
-    """
-    参数:
-    - rnn_dims: RNN 层的维度。
-    - fc_dims: 全连接层的维度。
-    - bits: 用于量化的位数，影响音频的输出解析度。
-    - pad: 用于填充的大小，影响卷积操作。
-    - upsample_factors: 上采样因子数组，决定特征上采样的倍数。
-    - feat_dims: 特征维度。
-    - compute_dims: 计算维度，用于中间层。
-    - res_out_dims: 残差网络输出维度。
-    - res_blocks: 残差块的数量。
-    - hop_length: 音频处理中的跳跃长度，影响时间分辨率。
-    - sample_rate: 采样率，定义音频的时间分辨率。
-    - mode: 模型的运行模式，'RAW' 用于原始波形生成，'MOL' 用于混合逻辑输出。
-    """
+        """
+        参数:
+        - rnn_dims: RNN 层的维度。
+        - fc_dims: 全连接层的维度。
+        - bits: 用于量化的位数，影响音频的输出解析度。
+        - pad: 用于填充的大小，影响卷积操作。
+        - upsample_factors: 上采样因子数组，决定特征上采样的倍数。
+        - feat_dims: 特征维度。
+        - compute_dims: 计算维度，用于中间层。
+        - res_out_dims: 残差网络输出维度。
+        - res_blocks: 残差块的数量。
+        - hop_length: 音频处理中的跳跃长度，影响时间分辨率。
+        - sample_rate: 采样率，定义音频的时间分辨率。
+        - mode: 模型的运行模式，'RAW' 用于原始波形生成，'MOL' 用于混合逻辑输出。
+        """
         super().__init__()
         self.mode = mode
         self.pad = pad
-        if self.mode == 'RAW' :
+        if self.mode == 'RAW':
             self.n_classes = 2 ** bits
-        elif self.mode == 'MOL' :
+        elif self.mode == 'MOL':
             self.n_classes = 30
-        else :
-            RuntimeError("Unknown model mode value - ", self.mode)
+        else:
+            raise RuntimeError("Unknown model mode value - ", self.mode)
 
         self.rnn_dims = rnn_dims
         self.aux_dims = res_out_dims // 4
@@ -389,15 +389,15 @@ class WaveRNN(nn.Module):
         return padded
 
     def fold_with_overlap(self, x, target, overlap):
-    """
-    将输入张量折叠成多个重叠段，以便于批量处理。
-    参数:
-    - x: 输入张量，通常是上采样后的条件特征。
-    - target: 目标段长度。
-    - overlap: 重叠大小。
-    返回:
-    - 折叠后的张量。
-    """
+        """
+        将输入张量折叠成多个重叠段，以便于批量处理。
+        参数:
+        - x: 输入张量，通常是上采样后的条件特征。
+        - target: 目标段长度。
+        - overlap: 重叠大小。
+        返回:
+        - 折叠后的张量。
+        """
 
         _, total_len, features = x.size()
 
@@ -426,18 +426,15 @@ class WaveRNN(nn.Module):
         return folded
 
     def xfade_and_unfold(self, y, target, overlap):
-
-    """
-    应用交叉淡入淡出效果并将其展开为一维数组。
-
-    参数:
-    - y: 批处理的音频样本序列，形状为 (num_folds, target + 2 * overlap)，类型为 np.float64。
-    - target: 目标段长度。
-    - overlap: 重叠步数，用于交叉淡入淡出和 RNN 热身。
-
-    返回值:
-    - 展开的一维音频样本数组，形状为 (total_len)，类型为 np.float64。
-    """
+        """
+        应用交叉淡入淡出效果并将其展开为一维数组。
+        参数:
+        - y: 批处理的音频样本序列，形状为 (num_folds, target + 2 * overlap)，类型为 np.float64。
+        - target: 目标段长度。
+        - overlap: 重叠步数，用于交叉淡入淡出和 RNN 热身。
+        返回值:
+        - 展开的一维音频样本数组，形状为 (total_len)，类型为 np.float64。
+        """
 
         num_folds, length = y.shape
         target = length - 2 * overlap
@@ -477,36 +474,36 @@ class WaveRNN(nn.Module):
         """
         return self.step.data.item()
 
-    def checkpoint(self, model_dir, optimizer) :
-    """
-    保存模型的检查点。
+    def checkpoint(self, model_dir, optimizer):
+        """
+        保存模型的检查点。
 
-    参数:
-    - model_dir: 模型保存的目录。
-    - optimizer: 优化器对象。
-    """
+        参数:
+        - model_dir: 模型保存的目录。
+        - optimizer: 优化器对象。
+        """
         k_steps = self.get_step() // 1000
         self.save(model_dir.joinpath("checkpoint_%dk_steps.pt" % k_steps), optimizer)
 
-    def log(self, path, msg) :
-    """
-    记录日志信息。
+    def log(self, path, msg):
+        """
+        记录日志信息。
 
-    参数:
-    - path: 日志文件的路径。
-    - msg: 要记录的信息。
-    """
+        参数:
+        - path: 日志文件的路径。
+        - msg: 要记录的信息。
+        """
         with open(path, 'a') as f:
             print(msg, file=f)
 
-    def load(self, path, optimizer) :
-    """
-    加载模型的检查点。
+    def load(self, path, optimizer):
+        """
+        加载模型的检查点。
 
-    参数:
-    - path: 检查点文件的路径。
-    - optimizer: 优化器对象。
-    """
+        参数:
+        - path: 检查点文件的路径。
+        - optimizer: 优化器对象。
+        """
         checkpoint = torch.load(path)
         if "optimizer_state" in checkpoint:
             self.load_state_dict(checkpoint["model_state"])
@@ -515,27 +512,27 @@ class WaveRNN(nn.Module):
             # Backwards compatibility
             self.load_state_dict(checkpoint)
 
-    def save(self, path, optimizer) :
-    """
-    保存模型的状态和优化器的状态。
+    def save(self, path, optimizer):
+        """
+        保存模型的状态和优化器的状态。
 
-    参数:
-    - path: 保存文件的路径。
-    - optimizer: 优化器对象。
-    """
+        参数:
+        - path: 保存文件的路径。
+        - optimizer: 优化器对象。
+        """
         torch.save({
             "model_state": self.state_dict(),
             "optimizer_state": optimizer.state_dict(),
         }, path)
 
     def num_params(self, print_out=True):
-    """
-    计算并打印模型的可训练参数数量。
+        """
+        计算并打印模型的可训练参数数量。
 
-    参数:
-    - print_out: 是否打印参数数量，默认为 True。
-    """
+        参数:
+        - print_out: 是否打印参数数量，默认为 True。
+        """
         parameters = filter(lambda p: p.requires_grad, self.parameters())
         parameters = sum([np.prod(p.size()) for p in parameters]) / 1_000_000
-        if print_out :
+        if print_out:
             print('Trainable Parameters: %.3fM' % parameters)

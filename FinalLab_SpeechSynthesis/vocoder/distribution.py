@@ -105,7 +105,7 @@ def discretized_mix_logistic_loss(y_hat, y, num_classes=65536,
 
 
 def sample_from_discretized_mix_logistic(y, log_scale_min=None):
-   """
+    """
     从离散混合逻辑斯蒂分布中采样。
 
     参数:

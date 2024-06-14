@@ -21,7 +21,7 @@ class DownloadProgressBar(tqdm):
 
 
 def download(url: str, target: Path, bar_pos=0):
-     """
+    """
     从指定的 URL 下载文件到本地路径，并显示进度条。如果在下载过程中遇到 HTTP 错误，则下载会提前结束。
 
     参数：

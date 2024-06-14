@@ -5,6 +5,9 @@ from pathlib import Path
 from toolbox import Toolbox
 from utils.argutils import print_args
 from utils.default_models import ensure_default_models
+import matplotlib
+matplotlib.use('Agg')  # 或者 'TkAgg'
+import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
