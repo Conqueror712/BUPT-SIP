@@ -5,24 +5,48 @@ from scipy import signal
 from scipy.io import wavfile
 import soundfile as sf
 
-
+# 加载音频文件
 def load_wav(path, sr):
     return librosa.core.load(path, sr=sr)[0]
-
+    
+# 保存音频文件
 def save_wav(wav, path, sr):
     wav *= 32767 / max(0.01, np.max(np.abs(wav)))
     #proposed by @dsmiller
     wavfile.write(path, sr, wav.astype(np.int16))
 
+# 以浮点格式保存音频文件，常用于WaveNet和其他生成模型的输出。
 def save_wavenet_wav(wav, path, sr):
     sf.write(path, wav.astype(np.float32), sr)
 
 def preemphasis(wav, k, preemphasize=True):
+    """
+    应用预加重滤波器。
+
+    参数:
+        wav (np.ndarray): 原始音频信号。
+        k (float): 预加重系数。
+        preemphasize (bool): 是否应用预加重。
+
+    返回:
+        np.ndarray: 经过预加重处理的音频信号。
+    """
     if preemphasize:
         return signal.lfilter([1, -k], [1], wav)
     return wav
 
 def inv_preemphasis(wav, k, inv_preemphasize=True):
+    """
+    应用反预加重滤波器。
+
+    参数:
+        wav (np.ndarray): 预加重后的音频信号。
+        k (float): 预加重系数。
+        inv_preemphasize (bool): 是否应用反预加重。
+
+    返回:
+        np.ndarray: 经过反预加重处理的音频信号。
+    """
     if inv_preemphasize:
         return signal.lfilter([1], [1, -k], wav)
     return wav
@@ -48,6 +72,7 @@ def get_hop_size(hparams):
         hop_size = int(hparams.frame_shift_ms / 1000 * hparams.sample_rate)
     return hop_size
 
+# 类似于melspectrogram，但生成线性频谱图。
 def linearspectrogram(wav, hparams):
     D = _stft(preemphasis(wav, hparams.preemphasis, hparams.preemphasize), hparams)
     S = _amp_to_db(np.abs(D), hparams) - hparams.ref_level_db
@@ -57,6 +82,16 @@ def linearspectrogram(wav, hparams):
     return S
 
 def melspectrogram(wav, hparams):
+    """
+    从音频信号生成梅尔频谱图。
+
+    参数:
+        wav (np.ndarray): 音频信号。
+        hparams: 包含音频处理参数的对象。
+
+    返回:
+        np.ndarray: 梅尔频谱图。
+    """
     D = _stft(preemphasis(wav, hparams.preemphasis, hparams.preemphasize), hparams)
     S = _amp_to_db(_linear_to_mel(np.abs(D), hparams), hparams) - hparams.ref_level_db
     
@@ -64,6 +99,7 @@ def melspectrogram(wav, hparams):
         return _normalize(S, hparams)
     return S
 
+# 将线性频谱图转换回音频信号。
 def inv_linear_spectrogram(linear_spectrogram, hparams):
     """Converts linear spectrogram to waveform using librosa"""
     if hparams.signal_normalization:
@@ -81,6 +117,7 @@ def inv_linear_spectrogram(linear_spectrogram, hparams):
     else:
         return inv_preemphasis(_griffin_lim(S ** hparams.power, hparams), hparams.preemphasis, hparams.preemphasize)
 
+# 将梅尔频谱图转换回音频信号。
 def inv_mel_spectrogram(mel_spectrogram, hparams):
     """Converts mel spectrogram to waveform using librosa"""
     if hparams.signal_normalization:
@@ -114,12 +151,14 @@ def _griffin_lim(S, hparams):
         y = _istft(S_complex * angles, hparams)
     return y
 
+# 短时傅里叶变换
 def _stft(y, hparams):
     if hparams.use_lws:
         return _lws_processor(hparams).stft(y).T
     else:
         return librosa.stft(y=y, n_fft=hparams.n_fft, hop_length=get_hop_size(hparams), win_length=hparams.win_size)
 
+# 逆短时傅里叶变换
 def _istft(y, hparams):
     return librosa.istft(y, hop_length=get_hop_size(hparams), win_length=hparams.win_size)
 
@@ -153,12 +192,14 @@ def librosa_pad_lr(x, fsize, fshift):
 _mel_basis = None
 _inv_mel_basis = None
 
+# 将线性频谱转换为梅尔频谱
 def _linear_to_mel(spectogram, hparams):
     global _mel_basis
     if _mel_basis is None:
         _mel_basis = _build_mel_basis(hparams)
     return np.dot(_mel_basis, spectogram)
 
+# 将梅尔频谱转换为线性频谱
 def _mel_to_linear(mel_spectrogram, hparams):
     global _inv_mel_basis
     if _inv_mel_basis is None:
@@ -177,6 +218,7 @@ def _amp_to_db(x, hparams):
 def _db_to_amp(x):
     return np.power(10.0, (x) * 0.05)
 
+# 对频谱数据进行归一化
 def _normalize(S, hparams):
     if hparams.allow_clipping_in_normalization:
         if hparams.symmetric_mels:
@@ -191,6 +233,7 @@ def _normalize(S, hparams):
     else:
         return hparams.max_abs_value * ((S - hparams.min_level_db) / (-hparams.min_level_db))
 
+# 反归一化
 def _denormalize(D, hparams):
     if hparams.allow_clipping_in_normalization:
         if hparams.symmetric_mels:
