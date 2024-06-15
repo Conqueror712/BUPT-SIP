@@ -21,27 +21,27 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray],
                    normalize: Optional[bool] = True,
                    trim_silence: Optional[bool] = True):
     """
-    Applies the preprocessing operations used in training the Speaker Encoder to a waveform 
-    either on disk or in memory. The waveform will be resampled to match the data hyperparameters.
+    对波形文件进行预处理，适用于语音编码器训练，调整波形的采样率，可选地标准化音量和修剪静音。
 
-    :param fpath_or_wav: either a filepath to an audio file (many extensions are supported, not 
-    just .wav), either the waveform as a numpy array of floats.
-    :param source_sr: if passing an audio waveform, the sampling rate of the waveform before 
-    preprocessing. After preprocessing, the waveform's sampling rate will match the data 
-    hyperparameters. If passing a filepath, the sampling rate will be automatically detected and 
-    this argument will be ignored.
+    参数:
+        fpath_or_wav (Union[str, Path, np.ndarray]): 音频文件的路径或者作为numpy数组的波形。
+        source_sr (Optional[int]): 如果波形已加载，其输入采样率。对于文件，将自动检测此参数用于重采样。
+        normalize (Optional[bool]): 若为True，则标准化波形的音量。
+        trim_silence (Optional[bool]): 若为True，则使用声音活动检测器修剪长时间静音。
+
+    返回:
+        np.ndarray: 预处理后的波形，以numpy数组形式。
     """
-    # Load the wav from disk if needed
+
     if isinstance(fpath_or_wav, str) or isinstance(fpath_or_wav, Path):
         wav, source_sr = librosa.load(str(fpath_or_wav), sr=None)
     else:
         wav = fpath_or_wav
     
-    # Resample the wav if needed
+
     if source_sr is not None and source_sr != sampling_rate:
         wav = librosa.resample(wav, source_sr, sampling_rate)
         
-    # Apply the preprocessing: normalize volume and shorten long silences 
     if normalize:
         wav = normalize_volume(wav, audio_norm_target_dBFS, increase_only=True)
     if webrtcvad and trim_silence:
@@ -52,8 +52,13 @@ def preprocess_wav(fpath_or_wav: Union[str, Path, np.ndarray],
 
 def wav_to_mel_spectrogram(wav):
     """
-    Derives a mel spectrogram ready to be used by the encoder from a preprocessed audio waveform.
-    Note: this not a log-mel spectrogram.
+    将预处理后的波形转换为Mel频谱图。
+
+    参数:
+        wav (np.ndarray): 预处理后的音频波形，为numpy数组。
+
+    返回:
+        np.ndarray: 从输入波形导出的Mel频谱图，转置后供编码器使用。
     """
     frames = librosa.feature.melspectrogram(
         wav,
@@ -67,13 +72,14 @@ def wav_to_mel_spectrogram(wav):
 
 def trim_long_silences(wav):
     """
-    Ensures that segments without voice in the waveform remain no longer than a 
-    threshold determined by the VAD parameters in params.py.
+    使用语音活动检测器修剪波形中的长时间静音。
 
-    :param wav: the raw waveform as a numpy array of floats 
-    :return: the same waveform with silences trimmed away (length <= original wav length)
+    参数:
+        wav (np.ndarray): 原始音频波形，为numpy数组。
+
+    返回:
+        np.ndarray: 修剪静音后的波形，可能比输入更短。
     """
-    # Compute the voice detection window size
     samples_per_window = (vad_window_length * sampling_rate) // 1000
     
     # Trim the end of the audio to have a multiple of the window size
@@ -109,6 +115,18 @@ def trim_long_silences(wav):
 
 
 def normalize_volume(wav, target_dBFS, increase_only=False, decrease_only=False):
+    """
+    将波形的音量标准化到目标分贝满标尺（dBFS）级别。
+
+    参数:
+        wav (np.ndarray): 音频波形，为numpy数组。
+        target_dBFS (float): 目标音量的dBFS。
+        increase_only (bool): 如果为True，仅增加音量。
+        decrease_only (bool): 如果为True，仅减少音量。
+
+    返回:
+        np.ndarray: 音量已标准化的波形。
+    """
     if increase_only and decrease_only:
         raise ValueError("Both increase only and decrease only are set")
     dBFS_change = target_dBFS - 10 * np.log10(np.mean(wav ** 2))
