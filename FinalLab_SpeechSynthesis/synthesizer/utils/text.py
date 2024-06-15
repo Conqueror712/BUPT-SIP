@@ -12,17 +12,19 @@ _curly_re = re.compile(r"(.*?)\{(.+?)\}(.*)")
 
 
 def text_to_sequence(text, cleaner_names):
-    """Converts a string of text to a sequence of IDs corresponding to the symbols in the text.
+    """
+    将文本字符串转换为对应符号的ID序列。
 
-      The text can optionally have ARPAbet sequences enclosed in curly braces embedded
-      in it. For example, "Turn left on {HH AW1 S S T AH0 N} Street."
+    参数:
+        text (str): 需要转换的文本字符串。
+        cleaner_names (list): 要应用的文本清洗函数名称列表。
 
-      Args:
-        text: string to convert to a sequence
-        cleaner_names: names of the cleaner functions to run the text through
+    返回:
+        list: 对应文本中符号的ID序列。
 
-      Returns:
-        List of integers corresponding to the symbols in the text
+    描述:
+        文本中可以包含用花括号括起来的ARPAbet序列，例如 "Turn left on {HH AW1 S S T AH0 N} Street."。
+        该函数首先检查文本中的ARPAbet序列，并适当转换，然后应用指定的清洗函数，最后转换为符号ID序列。
     """
     sequence = []
 
@@ -42,7 +44,18 @@ def text_to_sequence(text, cleaner_names):
 
 
 def sequence_to_text(sequence):
-    """Converts a sequence of IDs back to a string"""
+    """
+    将符号ID序列转换回文本字符串。
+
+    参数:
+        sequence (list): 符号ID序列。
+
+    返回:
+        str: 从序列转换回的文本字符串。
+
+    描述:
+        该函数将ID序列转换回文本，如果符号表示ARPAbet，则将其放回花括号中。
+    """
     result = ""
     for symbol_id in sequence:
         if symbol_id in _id_to_symbol:
@@ -53,7 +66,7 @@ def sequence_to_text(sequence):
             result += s
     return result.replace("}{", " ")
 
-
+# 根据指定的清洗函数列表清洗文本
 def _clean_text(text, cleaner_names):
     for name in cleaner_names:
         cleaner = getattr(cleaners, name)
@@ -62,14 +75,14 @@ def _clean_text(text, cleaner_names):
         text = cleaner(text)
     return text
 
-
+# 将符号列表转换为ID序列
 def _symbols_to_sequence(symbols):
     return [_symbol_to_id[s] for s in symbols if _should_keep_symbol(s)]
 
-
+# 将ARPAbet文本转换为ID序列
 def _arpabet_to_sequence(text):
     return _symbols_to_sequence(["@" + s for s in text.split()])
 
-
+# 检查是否应该保留符号
 def _should_keep_symbol(s):
     return s in _symbol_to_id and s not in ("_", "~")
