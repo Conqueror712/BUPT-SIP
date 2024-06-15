@@ -14,9 +14,7 @@ from encoder.params_data import *
 _AUDIO_EXTENSIONS = ("wav", "flac", "m4a", "mp3")
 
 class DatasetLog:
-    """
-    Registers metadata about the dataset in a text file.
-    """
+    #初始化 DatasetLog 类的实例
     def __init__(self, root, name):
         self.text_file = open(Path(root, "Log_%s.txt" % name.replace("/", "_")), "w")
         self.sample_data = dict()
@@ -26,6 +24,7 @@ class DatasetLog:
         self.write_line("-----")
         self._log_params()
 
+    #记录预处理参数到日志文件
     def _log_params(self):
         from encoder import params_data
         self.write_line("Parameter values:")
@@ -37,12 +36,14 @@ class DatasetLog:
     def write_line(self, line):
         self.text_file.write("%s\n" % line)
 
+    # 将样本数据添加到内存中的数据字典，用于后续的统计分析
     def add_sample(self, **kwargs):
         for param_name, value in kwargs.items():
             if not param_name in self.sample_data:
                 self.sample_data[param_name] = []
             self.sample_data[param_name].append(value)
 
+    #完成日志记录，输出统计信息并关闭文件
     def finalize(self):
         self.write_line("Statistics:")
         for param_name, values in self.sample_data.items():
@@ -54,7 +55,7 @@ class DatasetLog:
         self.write_line("Finished on %s" % end_time)
         self.text_file.close()
 
-
+# 初始化预处理数据集，创建日志记录器
 def _init_preprocess_dataset(dataset_name, datasets_root, out_dir) -> (Path, DatasetLog):
     dataset_root = datasets_root.joinpath(dataset_name)
     if not dataset_root.exists():
@@ -62,7 +63,7 @@ def _init_preprocess_dataset(dataset_name, datasets_root, out_dir) -> (Path, Dat
         return None, None
     return dataset_root, DatasetLog(out_dir, dataset_name)
 
-
+# 预处理单个说话者的语音数据
 def _preprocess_speaker(speaker_dir: Path, datasets_root: Path, out_dir: Path, skip_existing: bool):
     # Give a name to the speaker that includes its dataset
     speaker_name = "_".join(speaker_dir.relative_to(datasets_root).parts)
@@ -114,7 +115,7 @@ def _preprocess_speaker(speaker_dir: Path, datasets_root: Path, out_dir: Path, s
 
     return audio_durs
 
-
+# 处理多个说话者的目录，调用 _preprocess_speaker 预处理每个说话者的数据。
 def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, skip_existing, logger):
     print("%s: Preprocessing data for %d speakers." % (dataset_name, len(speaker_dirs)))
 
@@ -129,7 +130,7 @@ def _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir,
     logger.finalize()
     print("Done preprocessing %s.\n" % dataset_name)
 
-
+# 预处理 LibriSpeech 数据集的说话者
 def preprocess_librispeech(datasets_root: Path, out_dir: Path, skip_existing=False):
     for dataset_name in librispeech_datasets["train"]["other"]:
         # Initialize the preprocessing
@@ -141,7 +142,7 @@ def preprocess_librispeech(datasets_root: Path, out_dir: Path, skip_existing=Fal
         speaker_dirs = list(dataset_root.glob("*"))
         _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, skip_existing, logger)
 
-
+# 预处理 VoxCeleb1 数据集的说话者，只包括假定为英语母语的说话
 def preprocess_voxceleb1(datasets_root: Path, out_dir: Path, skip_existing=False):
     # Initialize the preprocessing
     dataset_name = "VoxCeleb1"
@@ -170,7 +171,7 @@ def preprocess_voxceleb1(datasets_root: Path, out_dir: Path, skip_existing=False
     # Preprocess all speakers
     _preprocess_speaker_dirs(speaker_dirs, dataset_name, datasets_root, out_dir, skip_existing, logger)
 
-
+#  预处理 VoxCeleb2 数据集的说话者。
 def preprocess_voxceleb2(datasets_root: Path, out_dir: Path, skip_existing=False):
     # Initialize the preprocessing
     dataset_name = "VoxCeleb2"
