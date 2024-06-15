@@ -26,6 +26,22 @@ def time_string():
 
 def train(run_id: str, syn_dir: Path, models_dir: Path, save_every: int,  backup_every: int, force_restart: bool,
           hparams):
+    """
+    功能:
+    训练Tacotron模型并定期保存检查点和备份。
+
+    参数:
+        run_id: 运行ID，用于标识训练任务。
+        syn_dir: 合成器数据的根目录。
+        models_dir: 模型保存的目录。
+        save_every: 定期保存模型的间隔步数。
+        backup_every: 定期备份模型的间隔步数。
+        force_restart: 是否强制从头开始训练。
+        hparams: 超参数对象。
+
+    返回值:
+        无返回值。
+    """
     models_dir.mkdir(exist_ok=True)
 
     model_dir = models_dir.joinpath(run_id)
@@ -236,6 +252,26 @@ def train(run_id: str, syn_dir: Path, models_dir: Path, save_every: int,  backup
 
 def eval_model(attention, mel_prediction, target_spectrogram, input_seq, step,
                plot_dir, mel_output_dir, wav_dir, sample_num, loss, hparams):
+     """
+    功能:
+    评估模型并保存一些结果以供评估。
+
+    参数:
+        attention: 注意力图。
+        mel_prediction: 预测的梅尔频谱图。
+        target_spectrogram: 目标梅尔频谱图。
+        input_seq: 输入序列。
+        step: 当前训练步数。
+        plot_dir: 保存图像的目录。
+        mel_output_dir: 保存梅尔频谱图的目录。
+        wav_dir: 保存生成的音频的目录。
+        sample_num: 样本编号。
+        loss: 当前损失。
+        hparams: 超参数对象。
+
+    返回值:
+        无返回值。
+    """
     # Save some results for evaluation
     attention_path = str(plot_dir.joinpath("attention_step_{}_sample_{}".format(step, sample_num)))
     save_attention(attention, attention_path)
