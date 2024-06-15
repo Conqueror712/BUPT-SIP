@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from pathlib import Path
 from typing import Union
 
-
+# 高速网络层，常用于处理复杂的非线性问题，增强模型的表达能力。
 class HighwayNetwork(nn.Module):
     def __init__(self, size):
         super().__init__()
@@ -21,7 +21,7 @@ class HighwayNetwork(nn.Module):
         y = g * F.relu(x1) + (1. - g) * x
         return y
 
-
+# 编码器网络，用于特征抽取和语音编码。
 class Encoder(nn.Module):
     def __init__(self, embed_dims, num_chars, encoder_dims, K, num_highways, dropout):
         super().__init__()
@@ -72,7 +72,7 @@ class Encoder(nn.Module):
         x = torch.cat((x, e), 2)
         return x
 
-
+# 执行卷积操作后跟批量归一化，可选地应用ReLU激活。
 class BatchNormConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel, relu=True):
         super().__init__()
@@ -85,7 +85,7 @@ class BatchNormConv(nn.Module):
         x = F.relu(x) if self.relu is True else x
         return self.bnorm(x)
 
-
+# CBHG模块（1D卷积银行、高速网络和GRU层），用于音频信号处理。
 class CBHG(nn.Module):
     def __init__(self, K, in_channels, channels, proj_channels, num_highways):
         super().__init__()
@@ -166,6 +166,7 @@ class CBHG(nn.Module):
         to improve efficiency and avoid PyTorch yelling at us."""
         [m.flatten_parameters() for m in self._to_flatten]
 
+# 用于Tacotron模型中，负责对输入特征进行初步变换，提供给后续的注意力和解码器模块。
 class PreNet(nn.Module):
     def __init__(self, in_dims, fc1_dims=256, fc2_dims=128, dropout=0.5):
         super().__init__()
@@ -182,7 +183,7 @@ class PreNet(nn.Module):
         x = F.dropout(x, self.p, training=True)
         return x
 
-
+# 注意力机制类，用于在序列到序列的模型中计算上下文向量。
 class Attention(nn.Module):
     def __init__(self, attn_dims):
         super().__init__()
@@ -201,7 +202,7 @@ class Attention(nn.Module):
 
         return scores.transpose(1, 2)
 
-
+# 位置敏感的注意力机制，结合了位置信息的卷积网络和传统的注意力机制。
 class LSA(nn.Module):
     def __init__(self, attn_dim, kernel_size=31, filters=32):
         super().__init__()
@@ -241,7 +242,7 @@ class LSA(nn.Module):
 
         return scores.unsqueeze(-1).transpose(1, 2)
 
-
+#  Tacotron 模型的解码器部分，负责将编码器的输出转化为声谱图，并预测停止标记。
 class Decoder(nn.Module):
     # Class variable because its value doesn't change between classes
     # yet ought to be scoped by class because its a property of a Decoder
@@ -263,12 +264,39 @@ class Decoder(nn.Module):
         self.stop_proj = nn.Linear(encoder_dims + speaker_embedding_size + lstm_dims, 1)
 
     def zoneout(self, prev, current, p=0.1):
+        """
+        应用 zoneout 正则化技术来改善模型的泛化能力。
+
+        参数:
+            prev (Tensor): 上一时间步的状态。
+            current (Tensor): 当前时间步的状态。
+            p (float): zoneout 的概率。
+
+        返回:
+            Tensor: 应用 zoneout 后的状态。
+        """
         device = next(self.parameters()).device  # Use same device as parameters
         mask = torch.zeros(prev.size(), device=device).bernoulli_(p)
         return prev * mask + current * (1 - mask)
 
     def forward(self, encoder_seq, encoder_seq_proj, prenet_in,
                 hidden_states, cell_states, context_vec, t, chars):
+        """
+        前向传播方法，根据输入的编码序列和其它状态生成声谱图和停止标记。
+
+        参数:
+            encoder_seq (Tensor): 编码器的输出序列。
+            encoder_seq_proj (Tensor): 编码器序列的投影，用于解码器。
+            prenet_in (Tensor): 上一时间步的输出，作为解码器的输入。
+            hidden_states (tuple): 包含注意力 RNN 和两个残差 RNN 的隐藏状态。
+            cell_states (tuple): LSTM 的单元状态。
+            context_vec (Tensor): 上下文向量，由注意力机制生成。
+            t (int): 当前时间步。
+            chars (Tensor): 输入字符序列，用于注意力层的掩码。
+
+        返回:
+            Tuple: 包含生成的声谱图、注意力权重、新的隐藏状态、单元状态和上下文向量。
+        """
 
         # Need this for reshaping mels
         batch_size = encoder_seq.size(0)
@@ -324,7 +352,7 @@ class Decoder(nn.Module):
 
         return mels, scores, hidden_states, cell_states, context_vec, stop_tokens
 
-
+# Tacotron 语音合成模型，整合了编码器、解码器和后处理模块来生成语音。
 class Tacotron(nn.Module):
     def __init__(self, embed_dims, num_chars, encoder_dims, decoder_dims, n_mels, 
                  fft_bins, postnet_dims, encoder_K, lstm_dims, postnet_K, num_highways,
@@ -359,6 +387,17 @@ class Tacotron(nn.Module):
         self.decoder.r = self.decoder.r.new_tensor(value, requires_grad=False)
 
     def forward(self, x, m, speaker_embedding):
+        """
+        前向传播函数，处理输入序列并生成对应的语音输出。
+
+        参数:
+            x (Tensor): 输入的字符序列。
+            m (Tensor): 目标声谱图，用于训练。
+            speaker_embedding (Tensor): 说话者的嵌入向量。
+
+        返回:
+            Tuple: 包含声谱图、线性频谱和注意力权重。
+        """
         device = next(self.parameters()).device  # use same device as parameters
 
         self.step += 1
@@ -415,6 +454,17 @@ class Tacotron(nn.Module):
         return mel_outputs, linear, attn_scores, stop_outputs
 
     def generate(self, x, speaker_embedding=None, steps=2000):
+        """
+        生成语音的方法，用于推理阶段。
+
+        参数:
+            x (Tensor): 输入的字符序列。
+            speaker_embedding (Tensor, 可选): 说话者的嵌入向量。
+            steps (int): 最大生成步骤数。
+
+        返回:
+            Tuple: 包含生成的声谱图和线性频谱。
+        """
         self.eval()
         device = next(self.parameters()).device  # use same device as parameters
 
@@ -475,21 +525,26 @@ class Tacotron(nn.Module):
 
         return mel_outputs, linear, attn_scores
 
+    # 初始化模型参数。使用Xavier均匀分布来初始化所有权重矩阵。
     def init_model(self):
         for p in self.parameters():
             if p.dim() > 1: nn.init.xavier_uniform_(p)
 
+    # 获取当前训练步数。
     def get_step(self):
         return self.step.data.item()
 
+    # 重置训练步数为1。常用于重新开始一个训练过程。
     def reset_step(self):
         # assignment to parameters or buffers is overloaded, updates internal dict entry
         self.step = self.step.data.new_tensor(1)
 
+    # 将消息记录到指定的文件路径。
     def log(self, path, msg):
         with open(path, "a") as f:
             print(msg, file=f)
 
+    # 从指定路径加载模型状态。
     def load(self, path, optimizer=None):
         # Use device of model params as location for loaded state
         device = next(self.parameters()).device
@@ -499,6 +554,7 @@ class Tacotron(nn.Module):
         if "optimizer_state" in checkpoint and optimizer is not None:
             optimizer.load_state_dict(checkpoint["optimizer_state"])
 
+    # 将模型状态保存到指定路径
     def save(self, path, optimizer=None):
         if optimizer is not None:
             torch.save({
@@ -510,7 +566,7 @@ class Tacotron(nn.Module):
                 "model_state": self.state_dict(),
             }, str(path))
 
-
+    # 计算模型的可训练参数总数。
     def num_params(self, print_out=True):
         parameters = filter(lambda p: p.requires_grad, self.parameters())
         parameters = sum([np.prod(p.size()) for p in parameters]) / 1_000_000
