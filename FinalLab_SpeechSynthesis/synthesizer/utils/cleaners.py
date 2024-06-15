@@ -39,37 +39,37 @@ _abbreviations = [(re.compile("\\b%s\\." % x[0], re.IGNORECASE), x[1]) for x in 
     ("ft", "fort"),
 ]]
 
-
+#  扩展文本中的缩写词
 def expand_abbreviations(text):
     for regex, replacement in _abbreviations:
         text = re.sub(regex, replacement, text)
     return text
 
-
+# 将文本中的数字转换为文字表述
 def expand_numbers(text):
     return normalize_numbers(text)
 
-
+# 将文本转换为小写
 def lowercase(text):
     """lowercase input tokens."""
     return text.lower()
 
-
+# 合并文本中的多个连续空白字符为一个空格
 def collapse_whitespace(text):
     return re.sub(_whitespace_re, " ", text)
 
-
+# 将文本转换为 ASCII 编码，主要用于去除特殊字符或重音符号
 def convert_to_ascii(text):
     return unidecode(text)
 
-
+# 基本的文本清洗流程，包括转换小写和合并空白
 def basic_cleaners(text):
     """Basic pipeline that lowercases and collapses whitespace without transliteration."""
     text = lowercase(text)
     text = collapse_whitespace(text)
     return text
 
-
+# 用于非英语文本的清洗流程，包括转换为 ASCII、转换小写和合并空白
 def transliteration_cleaners(text):
     """Pipeline for non-English text that transliterates to ASCII."""
     text = convert_to_ascii(text)
@@ -77,7 +77,7 @@ def transliteration_cleaners(text):
     text = collapse_whitespace(text)
     return text
 
-
+# 英语文本的清洗流程，包括转换为 ASCII、扩展数字和缩写、转换小写和合并空白。
 def english_cleaners(text):
     """Pipeline for English text, including number and abbreviation expansion."""
     text = convert_to_ascii(text)
