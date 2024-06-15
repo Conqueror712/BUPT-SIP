@@ -1,16 +1,25 @@
 import numpy as np
 
-
+# 将给定的文本标题按单词数量分行
 def split_title_line(title_text, max_words=5):
-	"""
-	A function that splits any string based on specific character
-	(returning it with the string), with maximum number of words on it
-	"""
 	seq = title_text.split()
 	return "\n".join([" ".join(seq[i:i + max_words]) for i in range(0, len(seq), max_words)])
 
 
 def plot_alignment(alignment, path, title=None, split_title=False, max_len=None):
+    """
+    绘制解码器的对齐矩阵并保存为图像文件。
+
+    参数:
+        alignment (ndarray): 对齐矩阵，通常表示注意力权重。
+        path (str): 图像保存路径。
+        title (str, 可选): 图像标题。
+        split_title (bool, 可选): 是否将标题分行显示。
+        max_len (int, 可选): 最大长度限制对齐矩阵的列。
+
+    依赖:
+        matplotlib: 用于创建和保存图像。
+    """
 	import matplotlib
 	matplotlib.use("Agg")
 	import matplotlib.pyplot as plt
@@ -41,6 +50,21 @@ def plot_alignment(alignment, path, title=None, split_title=False, max_len=None)
 
 
 def plot_spectrogram(pred_spectrogram, path, title=None, split_title=False, target_spectrogram=None, max_len=None, auto_aspect=False):
+    """
+    绘制预测的声谱图，可选择同时绘制目标声谱图。
+
+    参数:
+        pred_spectrogram (ndarray): 预测的声谱图数据。
+        path (str): 图像保存路径。
+        title (str, 可选): 图像标题。
+        split_title (bool, 可选): 是否将标题分行显示。
+        target_spectrogram (ndarray, 可选): 目标声谱图数据，用于比较。
+        max_len (int, 可选): 最大长度限制声谱图的列。
+        auto_aspect (bool, 可选): 是否自动调整声谱图的长宽比。
+
+    依赖:
+        matplotlib: 用于创建和保存图像。
+    """
 	import matplotlib
 	matplotlib.use("Agg")
 	import matplotlib.pyplot as plt
