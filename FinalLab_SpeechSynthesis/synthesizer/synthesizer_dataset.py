@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from synthesizer.utils.text import text_to_sequence
 
-
+# 自定义数据集类，用于加载和处理训练数据，包括梅尔频谱图和说话人嵌入。
 class SynthesizerDataset(Dataset):
     def __init__(self, metadata_fpath: Path, mel_dir: Path, embed_dir: Path, hparams):
         print("Using inputs from:\n\t%s\n\t%s\n\t%s" % (metadata_fpath, mel_dir, embed_dir))
@@ -22,7 +22,8 @@ class SynthesizerDataset(Dataset):
         self.hparams = hparams
         
         print("Found %d samples" % len(self.samples_fpaths))
-    
+
+    # 获取数据集中的一个样本
     def __getitem__(self, index):  
         # Sometimes index may be a list of 2 (not sure why this happens)
         # If that is the case, return a single item corresponding to first element in index
@@ -48,7 +49,18 @@ class SynthesizerDataset(Dataset):
 
 
 def collate_synthesizer(batch, r, hparams):
-    # Text
+    """
+    功能:
+    处理一个批次的数据样本，将其转换为适合模型输入的格式。
+
+    参数:
+        batch: 数据样本的批次。
+        r: 减少因子。
+        hparams: 超参数。
+
+    返回值:
+        返回处理后的文本、梅尔频谱图、说话人嵌入和索引的张量。
+    """
     x_lens = [len(x[0]) for x in batch]
     max_x_len = max(x_lens)
 
@@ -85,8 +97,10 @@ def collate_synthesizer(batch, r, hparams):
 
     return chars, mel, embeds, indices
 
+# 对 1D 数组进行填充
 def pad1d(x, max_len, pad_value=0):
     return np.pad(x, (0, max_len - len(x)), mode="constant", constant_values=pad_value)
 
+# 对 2D 数组进行填充
 def pad2d(x, max_len, pad_value=0):
     return np.pad(x, ((0, 0), (0, max_len - x.shape[-1])), mode="constant", constant_values=pad_value)
