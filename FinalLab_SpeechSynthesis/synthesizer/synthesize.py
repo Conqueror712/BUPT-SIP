@@ -15,7 +15,19 @@ from synthesizer.utils.symbols import symbols
 
 
 def run_synthesis(in_dir: Path, out_dir: Path, syn_model_fpath: Path, hparams):
-    # This generates ground truth-aligned mels for vocoder training
+    """
+    功能:
+    运行语音合成过程，生成用于声码器训练的真实对齐梅尔频谱图 (GTA mels)。
+
+    参数:
+        in_dir (Path): 输入数据目录，包含训练数据和嵌入。
+        out_dir (Path): 输出数据目录，生成的梅尔频谱图将保存到此目录。
+        syn_model_fpath (Path): 语音合成模型的文件路径。
+        hparams: 超参数。
+
+    返回值:
+        无返回值。生成的梅尔频谱图和元数据文件将保存到指定的输出目录中。
+    """
     synth_dir = out_dir / "mels_gta"
     synth_dir.mkdir(exist_ok=True, parents=True)
     print(hparams_debug_string())
