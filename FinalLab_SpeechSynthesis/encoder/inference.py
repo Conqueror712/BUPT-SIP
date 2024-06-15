@@ -13,13 +13,11 @@ _device = None # type: torch.device
 
 def load_model(weights_fpath: Path, device=None):
     """
-    Loads the model in memory. If this function is not explicitely called, it will be run on the
-    first call to embed_frames() with the default weights file.
+    加载内存中的模型。如果不显式调用此函数，将在第一次调用 embed_frames() 时使用默认权重文件自动运行。
 
-    :param weights_fpath: the path to saved model weights.
-    :param device: either a torch device or the name of a torch device (e.g. "cpu", "cuda"). The
-    model will be loaded and will run on this device. Outputs will however always be on the cpu.
-    If None, will default to your GPU if it"s available, otherwise your CPU.
+    参数:
+        weights_fpath (Path): 保存模型权重的文件路径。
+        device (torch.device 或 str, 可选): 模型将在此设备上加载并运行，输出总在 cpu 上。如果为 None，则默认使用 GPU（如果可用），否则使用 CPU。
     """
     # TODO: I think the slow loading of the encoder might have something to do with the device it
     #   was saved on. Worth investigating.
@@ -41,11 +39,13 @@ def is_loaded():
 
 def embed_frames_batch(frames_batch):
     """
-    Computes embeddings for a batch of mel spectrogram.
+    计算一批 Mel 频谱图的嵌入。
 
-    :param frames_batch: a batch mel of spectrogram as a numpy array of float32 of shape
-    (batch_size, n_frames, n_channels)
-    :return: the embeddings as a numpy array of float32 of shape (batch_size, model_embedding_size)
+    参数:
+        frames_batch (numpy.ndarray): 形状为 (batch_size, n_frames, n_channels) 的一批 Mel 频谱图。
+
+    返回:
+        numpy.ndarray: 形状为 (batch_size, model_embedding_size) 的嵌入数组。
     """
     if _model is None:
         raise Exception("Model was not loaded. Call load_model() before inference.")
@@ -57,29 +57,19 @@ def embed_frames_batch(frames_batch):
 
 def compute_partial_slices(n_samples, partial_utterance_n_frames=partials_n_frames,
                            min_pad_coverage=0.75, overlap=0.5):
-    """
-    Computes where to split an utterance waveform and its corresponding mel spectrogram to obtain
-    partial utterances of <partial_utterance_n_frames> each. Both the waveform and the mel
-    spectrogram slices are returned, so as to make each partial utterance waveform correspond to
-    its spectrogram. This function assumes that the mel spectrogram parameters used are those
-    defined in params_data.py.
+     """
+    计算如何切分波形及其对应的 Mel 频谱图，以获得每个包含指定帧数的部分语音。返回的范围可能会超出波形长度，
+    建议将波形补零至 wave_slices[-1].stop。
 
-    The returned ranges may be indexing further than the length of the waveform. It is
-    recommended that you pad the waveform with zeros up to wave_slices[-1].stop.
+    参数:
+        n_samples (int): 波形中的样本数。
+        partial_utterance_n_frames (int): 每个部分语音的 Mel 频谱图帧数。
+        min_pad_coverage (float): 当最后一个部分语音帧数不足时，如果至少有 min_pad_coverage 比例的帧，
+                                  则认为存在该部分语音，否则将其丢弃。
+        overlap (float): 部分语音的重叠比例，0 表示完全不重叠。
 
-    :param n_samples: the number of samples in the waveform
-    :param partial_utterance_n_frames: the number of mel spectrogram frames in each partial
-    utterance
-    :param min_pad_coverage: when reaching the last partial utterance, it may or may not have
-    enough frames. If at least <min_pad_coverage> of <partial_utterance_n_frames> are present,
-    then the last partial utterance will be considered, as if we padded the audio. Otherwise,
-    it will be discarded, as if we trimmed the audio. If there aren't enough frames for 1 partial
-    utterance, this parameter is ignored so that the function always returns at least 1 slice.
-    :param overlap: by how much the partial utterance should overlap. If set to 0, the partial
-    utterances are entirely disjoint.
-    :return: the waveform slices and mel spectrogram slices as lists of array slices. Index
-    respectively the waveform and the mel spectrogram with these slices to obtain the partial
-    utterances.
+    返回:
+        tuple: 包含波形切片和 Mel 频谱图切片的列表，可用这些切片分别索引波形和 Mel 频谱图获取部分语音。
     """
     assert 0 <= overlap < 1
     assert 0 < min_pad_coverage <= 1
@@ -108,24 +98,20 @@ def compute_partial_slices(n_samples, partial_utterance_n_frames=partials_n_fram
 
 
 def embed_utterance(wav, using_partials=True, return_partials=False, **kwargs):
-    """
-    Computes an embedding for a single utterance.
+ """
+    计算单个语音的嵌入。
 
-    # TODO: handle multiple wavs to benefit from batching on GPU
-    :param wav: a preprocessed (see audio.py) utterance waveform as a numpy array of float32
-    :param using_partials: if True, then the utterance is split in partial utterances of
-    <partial_utterance_n_frames> frames and the utterance embedding is computed from their
-    normalized average. If False, the utterance is instead computed from feeding the entire
-    spectogram to the network.
-    :param return_partials: if True, the partial embeddings will also be returned along with the
-    wav slices that correspond to the partial embeddings.
-    :param kwargs: additional arguments to compute_partial_splits()
-    :return: the embedding as a numpy array of float32 of shape (model_embedding_size,). If
-    <return_partials> is True, the partial utterances as a numpy array of float32 of shape
-    (n_partials, model_embedding_size) and the wav partials as a list of slices will also be
-    returned. If <using_partials> is simultaneously set to False, both these values will be None
-    instead.
+    参数:
+        wav (numpy.ndarray): 预处理后的语音波形。
+        using_partials (bool): 如果为 True，则将语音分割成部分语音并计算其嵌入的归一化平均值。
+        return_partials (bool): 如果为 True，则返回部分嵌入和对应的波形切片。
+        kwargs: compute_partial_splits() 的额外参数。
+
+    返回:
+        numpy.ndarray: 形状为 (model_embedding_size,) 的嵌入数组。如果 return_partials 为 True，
+                       同时返回形状为 (n_partials, model_embedding_size) 的部分嵌入数组和波形切片列表。
     """
+    # TODO: handle multiple wavs to benefit from batching on GPU
     # Process the entire utterance if not using partials
     if not using_partials:
         frames = audio.wav_to_mel_spectrogram(wav)
