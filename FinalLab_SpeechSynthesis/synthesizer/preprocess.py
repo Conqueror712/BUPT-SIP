@@ -12,6 +12,23 @@ import librosa
 
 def preprocess_dataset(datasets_root: Path, out_dir: Path, n_processes: int, skip_existing: bool, hparams,
                        no_alignments: bool, datasets_name: str, subfolders: str):
+    """
+    功能:
+    预处理多个语音数据集文件夹，以便用于文本到语音 (TTS) 模型训练。该函数处理音频和文本数据，并生成用于训练 TTS 模型的梅尔频谱图和元数据文件。
+
+    参数:
+        datasets_root (Path): 数据集的根目录。
+        out_dir (Path): 处理后的文件的输出目录。
+        n_processes (int): 使用的并行处理进程数。
+        skip_existing (bool): 是否跳过已经存在的文件。
+        hparams: 音频处理的超参数。
+        no_alignments (bool): 是否处理对齐文件（适用于包含对齐文件的数据集，如 LibriSpeech）。
+        datasets_name (str): 数据集文件夹的名称。
+        subfolders (str): 需要处理的子文件夹的逗号分隔列表。
+
+    返回值:
+        无返回值。处理后的数据和元数据文件将保存到指定的输出目录中。
+    """
     # Gather the input directories
     dataset_root = datasets_root.joinpath(datasets_name)
     input_dirs = [dataset_root.joinpath(subfolder.strip()) for subfolder in subfolders.split(",")]
@@ -51,6 +68,20 @@ def preprocess_dataset(datasets_root: Path, out_dir: Path, n_processes: int, ski
 
 
 def preprocess_speaker(speaker_dir, out_dir: Path, skip_existing: bool, hparams, no_alignments: bool):
+    """
+    功能:
+    预处理单个说话者目录中的所有音频文件和文本文件。处理结果包括梅尔频谱图和元数据。
+
+    参数:
+        speaker_dir (Path): 说话者目录的路径。
+        out_dir (Path): 输出目录。
+        skip_existing (bool): 是否跳过已存在的文件。
+        hparams: 音频处理的超参数。
+        no_alignments (bool): 是否处理对齐文件。
+
+    返回值:
+        List[Tuple]: 包含每个处理后的语音文件的元数据的列表。
+    """
     metadata = []
     for book_dir in speaker_dir.glob("*"):
         if no_alignments:
@@ -110,6 +141,19 @@ def preprocess_speaker(speaker_dir, out_dir: Path, skip_existing: bool, hparams,
 
 
 def split_on_silences(wav_fpath, words, end_times, hparams):
+    """
+    功能:
+    根据静音分割音频文件。
+
+    参数:
+        wav_fpath (Path): 音频文件的路径。
+        words (List[str]): 对应的单词列表。
+        end_times (List[float]): 每个单词的结束时间列表。
+        hparams: 音频处理的超参数。
+
+    返回值:
+        Tuple[List[np.ndarray], List[str]]: 分割后的音频片段和对应的文本列表。
+    """
     # Load the audio waveform
     wav, _ = librosa.load(str(wav_fpath), hparams.sample_rate)
     if hparams.rescale:
@@ -183,6 +227,21 @@ def split_on_silences(wav_fpath, words, end_times, hparams):
 
 def process_utterance(wav: np.ndarray, text: str, out_dir: Path, basename: str,
                       skip_existing: bool, hparams):
+    """
+    功能:
+    处理单个语句，包括生成梅尔频谱图、保存音频和元数据。
+
+    参数:
+        wav (np.ndarray): 音频波形。
+        text (str): 对应的文本。
+        out_dir (Path): 输出目录。
+        basename (str): 文件基础名称。
+        skip_existing (bool): 是否跳过已存在的文件。
+        hparams: 音频处理的超参数。
+
+    返回值:
+        Tuple: 描述该训练样本的元数据元组。
+    """
     ## FOR REFERENCE:
     # For you not to lose your head if you ever wish to change things here or implement your own
     # synthesizer.
@@ -227,6 +286,17 @@ def process_utterance(wav: np.ndarray, text: str, out_dir: Path, basename: str,
 
 
 def embed_utterance(fpaths, encoder_model_fpath):
+    """
+    功能:
+    嵌入单个语句，生成说话人嵌入向量。
+
+    参数:
+        fpaths (Tuple[Path, Path]): 包含音频文件路径和嵌入文件路径的元组。
+        encoder_model_fpath (Path): 编码器模型文件路径。
+
+    返回值:
+        无返回值。嵌入结果保存在指定路径中。
+    """
     if not encoder.is_loaded():
         encoder.load_model(encoder_model_fpath)
 
@@ -239,6 +309,18 @@ def embed_utterance(fpaths, encoder_model_fpath):
 
 
 def create_embeddings(synthesizer_root: Path, encoder_model_fpath: Path, n_processes: int):
+    """
+    功能:
+    为所有语句生成说话人嵌入向量。
+
+    参数:
+        synthesizer_root (Path): 语音合成器根目录。
+        encoder_model_fpath (Path): 编码器模型文件路径。
+        n_processes (int): 使用的并行处理进程数。
+
+    返回值:
+        无返回值。嵌入结果保存在指定路径中。
+    """
     wav_dir = synthesizer_root.joinpath("audio")
     metadata_fpath = synthesizer_root.joinpath("train.txt")
     assert wav_dir.exists() and metadata_fpath.exists()
