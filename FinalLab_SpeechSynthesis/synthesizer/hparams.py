@@ -8,6 +8,15 @@ class HParams(object):
     def __repr__(self): return pprint.pformat(self.__dict__)
 
     def parse(self, string):
+        """
+        根据逗号分隔的字符串更新参数值，字符串格式为 "name=value"。
+
+        参数:
+            string (str): 包含要更新的参数的字符串。
+
+        返回:
+            更新后的 HParams 实例。
+        """
         # Overrides hparams from a comma-separated string of name=value pairs
         if len(string) > 0:
             overrides = [s.split("=") for s in string.split(",")]
