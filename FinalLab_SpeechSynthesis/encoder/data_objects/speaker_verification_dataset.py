@@ -19,7 +19,8 @@ class SpeakerVerificationDataset(Dataset):
 
     def __len__(self):
         return int(1e10)
-        
+
+    #按索引获取数据，这里返回随机选取的一个说话者。
     def __getitem__(self, index):
         return next(self.speaker_cycler)
     
@@ -32,6 +33,7 @@ class SpeakerVerificationDataset(Dataset):
     
     
 class SpeakerVerificationDataLoader(DataLoader):
+    #初始化数据加载器实例，配置基础 DataLoader 的参数。
     def __init__(self, dataset, speakers_per_batch, utterances_per_speaker, sampler=None, 
                  batch_sampler=None, num_workers=0, pin_memory=False, timeout=0, 
                  worker_init_fn=None):
