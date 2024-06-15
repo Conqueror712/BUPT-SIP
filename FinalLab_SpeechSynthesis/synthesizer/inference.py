@@ -16,12 +16,13 @@ class Synthesizer:
     hparams = hparams
 
     def __init__(self, model_fpath: Path, verbose=True):
-        """
-        The model isn't instantiated and loaded in memory until needed or until load() is called.
+    """
+    初始化 Synthesizer，设置模型文件路径和日志级别。
 
-        :param model_fpath: path to the trained model file
-        :param verbose: if False, prints less information when using the model
-        """
+    参数:
+        model_fpath (Path): 训练好的模型文件路径。
+        verbose (bool): 控制是否打印详细日志信息。
+    """
         self.model_fpath = model_fpath
         self.verbose = verbose
 
@@ -38,13 +39,13 @@ class Synthesizer:
 
     def is_loaded(self):
         """
-        Whether the model is loaded in memory.
+        检查模型是否已加载到内存
         """
         return self._model is not None
 
     def load(self):
         """
-        Instantiates and loads the model given the weights file that was passed in the constructor.
+        实例化并加载模型
         """
         self._model = Tacotron(embed_dims=hparams.tts_embed_dims,
                                num_chars=len(symbols),
@@ -70,17 +71,17 @@ class Synthesizer:
     def synthesize_spectrograms(self, texts: List[str],
                                 embeddings: Union[np.ndarray, List[np.ndarray]],
                                 return_alignments=False):
-        """
-        Synthesizes mel spectrograms from texts and speaker embeddings.
+    """
+    从文本和说话人嵌入生成梅尔声谱图。
 
-        :param texts: a list of N text prompts to be synthesized
-        :param embeddings: a numpy array or list of speaker embeddings of shape (N, 256)
-        :param return_alignments: if True, a matrix representing the alignments between the
-        characters
-        and each decoder output step will be returned for each spectrogram
-        :return: a list of N melspectrograms as numpy arrays of shape (80, Mi), where Mi is the
-        sequence length of spectrogram i, and possibly the alignments.
-        """
+    参数:
+        texts (List[str]): 需要合成的文本列表。
+        embeddings (Union[np.ndarray, List[np.ndarray]]): 对应的说话人嵌入列表。
+        return_alignments (bool): 是否返回解码器的对齐矩阵。
+
+    返回:
+        Tuple[List[np.ndarray], Optional[np.ndarray]]: 生成的梅尔声谱图列表，以及可选的对齐矩阵。
+    """
         # Load the model on the first request.
         if not self.is_loaded():
             self.load()
@@ -129,10 +130,15 @@ class Synthesizer:
 
     @staticmethod
     def load_preprocess_wav(fpath):
-        """
-        Loads and preprocesses an audio file under the same conditions the audio files were used to
-        train the synthesizer.
-        """
+    """
+    加载和预处理音频文件。
+
+    参数:
+        fpath (str or Path): 音频文件路径。
+
+    返回:
+        np.ndarray: 预处理后的音频数据。
+    """
         wav = librosa.load(str(fpath), hparams.sample_rate)[0]
         if hparams.rescale:
             wav = wav / np.abs(wav).max() * hparams.rescaling_max
@@ -141,8 +147,7 @@ class Synthesizer:
     @staticmethod
     def make_spectrogram(fpath_or_wav: Union[str, Path, np.ndarray]):
         """
-        Creates a mel spectrogram from an audio file in the same manner as the mel spectrograms that
-        were fed to the synthesizer when training.
+         从音频文件创建梅尔声谱图。
         """
         if isinstance(fpath_or_wav, str) or isinstance(fpath_or_wav, Path):
             wav = Synthesizer.load_preprocess_wav(fpath_or_wav)
@@ -155,8 +160,7 @@ class Synthesizer:
     @staticmethod
     def griffin_lim(mel):
         """
-        Inverts a mel spectrogram using Griffin-Lim. The mel spectrogram is expected to have been built
-        with the same parameters present in hparams.py.
+        使用 Griffin-Lim 算法反转梅尔声谱图。
         """
         return audio.inv_mel_spectrogram(mel, hparams)
 
