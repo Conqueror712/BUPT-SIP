@@ -16,6 +16,16 @@ class RandomCycler:
         self.next_items = []
     
     def sample(self, count: int):
+    """
+    从内部维护的元素列表中随机抽取指定数量的元素。该函数确保所有元素在多次调用中平均分布，
+    并重新随机化列表顺序以避免重复模式。
+
+    参数:
+        count (int): 需要从序列中抽取的元素数量。如果数量大于内部列表的长度，将进行多次抽取直到满足所需数量。
+
+    返回值:
+        list: 包含抽取的元素的列表。元素顺序是随机的，但是保证在连续调用中尽可能均匀分布。
+    """
         shuffle = lambda l: random.sample(l, len(l))
         
         out = []
