@@ -12,7 +12,7 @@ valid_symbols = [
 
 _valid_symbol_set = set(valid_symbols)
 
-
+# CMU 发音词典的简单封装类。提供基于文本文件的数据加载，并支持查询单词发音。
 class CMUDict:
   """Thin wrapper around CMUDict data. http://www.speech.cs.cmu.edu/cgi-bin/cmudict"""
   def __init__(self, file_or_path, keep_ambiguous=True):
@@ -29,7 +29,7 @@ class CMUDict:
   def __len__(self):
     return len(self._entries)
 
-
+  # 查询给定单词的 ARPAbet 发音列表
   def lookup(self, word):
     """Returns list of ARPAbet pronunciations of the given word."""
     return self._entries.get(word.upper())
@@ -38,7 +38,7 @@ class CMUDict:
 
 _alt_re = re.compile(r"\([0-9]+\)")
 
-
+# 解析 CMUDict 格式的数据文件
 def _parse_cmudict(file):
   cmudict = {}
   for line in file:
@@ -53,7 +53,7 @@ def _parse_cmudict(file):
           cmudict[word] = [pronunciation]
   return cmudict
 
-
+# 从字符串中提取发音
 def _get_pronunciation(s):
   parts = s.strip().split(" ")
   for part in parts:
