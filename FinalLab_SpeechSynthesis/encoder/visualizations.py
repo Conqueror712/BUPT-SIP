@@ -26,6 +26,7 @@ colormap = np.array([
 
 
 class Visualizations:
+    # 初始化可视化类，配置环境和更新频率。
     def __init__(self, env_name=None, update_every=10, server="http://localhost", disabled=False):
         # Tracking data
         self.last_update_timestamp = timer()
@@ -63,6 +64,7 @@ class Visualizations:
         self.projection_win = None
         self.implementation_string = ""
 
+    # 记录模型和数据参数到 Visdom。
     def log_params(self):
         if self.disabled:
             return
@@ -78,6 +80,7 @@ class Visualizations:
             param_string += "\t%s: %s<br>" % (param_name, value)
         self.vis.text(param_string, opts={"title": "Parameters"})
 
+    # 在 Visdom 中记录数据集信息。
     def log_dataset(self, dataset: SpeakerVerificationDataset):
         if self.disabled:
             return
@@ -87,6 +90,7 @@ class Visualizations:
         dataset_string = dataset_string.replace("\n", "<br>")
         self.vis.text(dataset_string, opts={"title": "Dataset"})
 
+    # 在 Visdom 中记录实现细节和运行参数。
     def log_implementation(self, params):
         if self.disabled:
             return
@@ -100,7 +104,16 @@ class Visualizations:
             opts={"title": "Training implementation"}
         )
 
+
     def update(self, loss, eer, step):
+        """
+        更新和绘制损失以及等错误率（EER）。
+
+        参数:
+            loss (float): 当前步骤的平均损失。
+            eer (float): 当前步骤的等错误率。
+            step (int): 当前训练步骤。
+        """
         # Update the tracking data
         now = timer()
         self.step_times.append(1000 * (now - self.last_update_timestamp))
@@ -154,6 +167,16 @@ class Visualizations:
         self.step_times.clear()
 
     def draw_projections(self, embeds, utterances_per_speaker, step, out_fpath=None, max_speakers=10):
+        """
+        绘制 UMAP 投影图，并可选地保存到文件。
+
+        参数:
+            embeds (np.array): 嵌入向量数组。
+            utterances_per_speaker (int): 每个说话者的话语数。
+            step (int): 当前的训练步骤。
+            out_fpath (Path, 可选): 输出文件路径。
+            max_speakers (int): 在投影中显示的最大说话者数。
+        """
         import matplotlib.pyplot as plt
 
         max_speakers = min(max_speakers, len(colormap))
