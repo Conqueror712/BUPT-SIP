@@ -10,6 +10,7 @@ import torch
 
 
 class SpeakerEncoder(nn.Module):
+    #初始化 SpeakerEncoder 模型
     def __init__(self, device, loss_device):
         super().__init__()
         self.loss_device = loss_device
@@ -29,7 +30,8 @@ class SpeakerEncoder(nn.Module):
 
         # Loss
         self.loss_fn = nn.CrossEntropyLoss().to(loss_device)
-        
+
+    #执行梯度操作，包括梯度缩放和裁剪
     def do_gradient_ops(self):
         # Gradient scale
         self.similarity_weight.grad *= 0.01
@@ -40,13 +42,15 @@ class SpeakerEncoder(nn.Module):
     
     def forward(self, utterances, hidden_init=None):
         """
-        Computes the embeddings of a batch of utterance spectrograms.
-        
-        :param utterances: batch of mel-scale filterbanks of same duration as a tensor of shape 
-        (batch_size, n_frames, n_channels) 
-        :param hidden_init: initial hidden state of the LSTM as a tensor of shape (num_layers, 
-        batch_size, hidden_size). Will default to a tensor of zeros if None.
-        :return: the embeddings as a tensor of shape (batch_size, embedding_size)
+        计算批次语音频谱的嵌入表示。
+
+        参数:
+            utterances: 批次 Mel 频谱，形状为 (batch_size, n_frames, n_channels)。
+            hidden_init: LSTM 的初始隐藏状态，形状为 (num_layers, batch_size, hidden_size)，
+                         如未提供，则默认为零张量。
+
+        返回:
+            嵌入表示的张量，形状为 (batch_size, embedding_size)。
         """
         # Pass the input through the LSTM layers and retrieve all outputs, the final hidden state
         # and the final cell state.
@@ -62,12 +66,13 @@ class SpeakerEncoder(nn.Module):
     
     def similarity_matrix(self, embeds):
         """
-        Computes the similarity matrix according the section 2.1 of GE2E.
+        根据 GE2E 论文第2.1节，计算嵌入向量的相似度矩阵。
 
-        :param embeds: the embeddings as a tensor of shape (speakers_per_batch, 
-        utterances_per_speaker, embedding_size)
-        :return: the similarity matrix as a tensor of shape (speakers_per_batch,
-        utterances_per_speaker, speakers_per_batch)
+        参数:
+            embeds: 批次嵌入张量，形状为 (speakers_per_batch, utterances_per_speaker, embedding_size)。
+
+        返回:
+            相似度矩阵张量，形状为 (speakers_per_batch, utterances_per_speaker, speakers_per_batch)。
         """
         speakers_per_batch, utterances_per_speaker = embeds.shape[:2]
         
@@ -106,11 +111,13 @@ class SpeakerEncoder(nn.Module):
     
     def loss(self, embeds):
         """
-        Computes the softmax loss according the section 2.1 of GE2E.
-        
-        :param embeds: the embeddings as a tensor of shape (speakers_per_batch, 
-        utterances_per_speaker, embedding_size)
-        :return: the loss and the EER for this batch of embeddings.
+        根据 GE2E 论文第2.1节，计算批次嵌入的 softmax 损失，并可选计算等错误率（EER）。
+
+        参数:
+            embeds: 批次嵌入张量，形状为 (speakers_per_batch, utterances_per_speaker, embedding_size)。
+
+        返回:
+            损失值和该批次嵌入的 EER。
         """
         speakers_per_batch, utterances_per_speaker = embeds.shape[:2]
         
