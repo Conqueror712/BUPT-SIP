@@ -10,11 +10,11 @@ _dollars_re = re.compile(r"\$([0-9\.\,]*[0-9]+)")
 _ordinal_re = re.compile(r"[0-9]+(st|nd|rd|th)")
 _number_re = re.compile(r"[0-9]+")
 
-
+# 从匹配的数字中移除逗号
 def _remove_commas(m):
     return m.group(1).replace(",", "")
 
-
+# 将小数点替换为 " point "
 def _expand_decimal_point(m):
     return m.group(1).replace(".", " point ")
 
@@ -39,11 +39,11 @@ def _expand_dollars(m):
     else:
         return "zero dollars"
 
-
+# 将序数数字转换为英文序数词
 def _expand_ordinal(m):
     return _inflect.number_to_words(m.group(0))
 
-
+# 将整数转换为英文单词表述。
 def _expand_number(m):
     num = int(m.group(0))
     if num > 1000 and num < 3000:
@@ -58,7 +58,7 @@ def _expand_number(m):
     else:
         return _inflect.number_to_words(num, andword="")
 
-
+# 将文本中的所有数字、货币和序数转换为完全的英文单词表述。
 def normalize_numbers(text):
     text = re.sub(_comma_number_re, _remove_commas, text)
     text = re.sub(_pounds_re, r"\1 pounds", text)
