@@ -57,7 +57,7 @@ def embed_frames_batch(frames_batch):
 
 def compute_partial_slices(n_samples, partial_utterance_n_frames=partials_n_frames,
                            min_pad_coverage=0.75, overlap=0.5):
-     """
+    """
     计算如何切分波形及其对应的 Mel 频谱图，以获得每个包含指定帧数的部分语音。返回的范围可能会超出波形长度，
     建议将波形补零至 wave_slices[-1].stop。
 
@@ -98,7 +98,7 @@ def compute_partial_slices(n_samples, partial_utterance_n_frames=partials_n_fram
 
 
 def embed_utterance(wav, using_partials=True, return_partials=False, **kwargs):
- """
+    """
     计算单个语音的嵌入。
 
     参数:

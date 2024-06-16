@@ -5,12 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bfb2e58f-321a-478a-aecd-0817504b9a9e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/toolbox/ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/toolbox/ui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/utils/argutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/utils/argutils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/utils/default_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/utils/default_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/vocoder/distribution.py" beforeDir="false" afterPath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/vocoder/distribution.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/vocoder/models/fatchord_version.py" beforeDir="false" afterPath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/vocoder/models/fatchord_version.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/BUPT-SIP.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/BUPT-SIP.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/encoder/inference.py" beforeDir="false" afterPath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/encoder/inference.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/synthesizer/inference.py" beforeDir="false" afterPath="$PROJECT_DIR$/FinalLab_SpeechSynthesis/synthesizer/inference.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,6 +70,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="inference" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="BUPT-SIP" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/FinalLab_SpeechSynthesis/synthesizer" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/FinalLab_SpeechSynthesis/synthesizer/inference.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BUPT-SIP" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -97,6 +117,7 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.inference" />
         <item itemvalue="Python.distribution" />
       </list>
     </recent_temporary>
@@ -110,6 +131,7 @@
       <option name="presentableId" value="Default" />
       <updated>1718378228448</updated>
       <workItem from="1718378230509" duration="5166000" />
+      <workItem from="1718538148299" duration="1723000" />
     </task>
     <servers />
   </component>
@@ -129,6 +151,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/BUPT_SIP$distribution.coverage" NAME="distribution Coverage Results" MODIFIED="1718382316069" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/FinalLab_SpeechSynthesis/vocoder" />
-    <SUITE FILE_PATH="coverage/BUPT_SIP$main.coverage" NAME="main Coverage Results" MODIFIED="1718383586001" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/FinalLab_SpeechSynthesis" />
+    <SUITE FILE_PATH="coverage/BUPT_SIP$main.coverage" NAME="main Coverage Results" MODIFIED="1718539861447" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/FinalLab_SpeechSynthesis" />
+    <SUITE FILE_PATH="coverage/BUPT_SIP$inference.coverage" NAME="inference Coverage Results" MODIFIED="1718538723895" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/FinalLab_SpeechSynthesis/synthesizer" />
   </component>
 </project>

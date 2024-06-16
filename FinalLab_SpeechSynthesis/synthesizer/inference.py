@@ -16,13 +16,13 @@ class Synthesizer:
     hparams = hparams
 
     def __init__(self, model_fpath: Path, verbose=True):
-    """
+        """
     初始化 Synthesizer，设置模型文件路径和日志级别。
 
     参数:
         model_fpath (Path): 训练好的模型文件路径。
         verbose (bool): 控制是否打印详细日志信息。
-    """
+        """
         self.model_fpath = model_fpath
         self.verbose = verbose
 
@@ -71,7 +71,7 @@ class Synthesizer:
     def synthesize_spectrograms(self, texts: List[str],
                                 embeddings: Union[np.ndarray, List[np.ndarray]],
                                 return_alignments=False):
-    """
+        """
     从文本和说话人嵌入生成梅尔声谱图。
 
     参数:
@@ -81,7 +81,7 @@ class Synthesizer:
 
     返回:
         Tuple[List[np.ndarray], Optional[np.ndarray]]: 生成的梅尔声谱图列表，以及可选的对齐矩阵。
-    """
+        """
         # Load the model on the first request.
         if not self.is_loaded():
             self.load()
@@ -130,7 +130,7 @@ class Synthesizer:
 
     @staticmethod
     def load_preprocess_wav(fpath):
-    """
+        """
     加载和预处理音频文件。
 
     参数:
@@ -138,7 +138,7 @@ class Synthesizer:
 
     返回:
         np.ndarray: 预处理后的音频数据。
-    """
+        """
         wav = librosa.load(str(fpath), hparams.sample_rate)[0]
         if hparams.rescale:
             wav = wav / np.abs(wav).max() * hparams.rescaling_max
